@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button";
 import { useMultiStepForm } from "@/features/announcement/ctx";
 import { cn } from "@/lib/utils";
 
+/**
+ * Mobile navigation component for multi-step form
+ * Provides back/forward navigation and handles step 3 submission trigger
+ * Only visible on mobile devices (lg:hidden)
+ */
 export function BottomNavigation() {
   const {
     currentStep,
@@ -13,12 +18,22 @@ export function BottomNavigation() {
     totalSteps,
     canGoBack,
     canGoForward,
-    handleSubmit,
+    clearForm,
   } = useMultiStepForm();
 
+  /**
+   * Handles next button click with special logic for step 3
+   * Step 3 requires triggering the form submission button instead of direct navigation
+   */
   const handleNext = () => {
     if (currentStep === 3) {
-      handleSubmit();
+      // Trigger step 3 form submission button programmatically
+      const step3Button = document.querySelector(
+        "[data-step3-submit]",
+      ) as HTMLButtonElement;
+      if (step3Button) {
+        step3Button.click();
+      }
     } else {
       setCurrentStep(currentStep + 1);
     }
@@ -69,7 +84,7 @@ export function BottomNavigation() {
           )}
           asChild
         >
-          <Link href="/inicio">
+          <Link href="/" onClick={clearForm}>
             Ver minhas ofertas
             <ArrowRight className="w-4 h-4" />
           </Link>

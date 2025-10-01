@@ -1,10 +1,8 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
 import Image from "next/image";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import {
   Accordion,
   AccordionContent,
@@ -14,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Form,
   FormControl,
   FormField,
   FormItem,
@@ -28,291 +25,272 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Companies } from "@/features/announcement/constants";
 import { useMultiStepForm } from "@/features/announcement/ctx";
 import { Step1Schema } from "@/features/announcement/schemas";
-import type { Step1Values } from "@/features/announcement/types";
+import type { CombinedFormValues } from "@/features/announcement/types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import LoadIcon from "@/public/loadicon";
 
+/**
+ * Step 1: Program and product selection
+ * Renders different UI layouts for mobile (select dropdown) and desktop (button grid)
+ * Handles form validation and step progression
+ */
 export function StepOne() {
-  const {
-    currentStep,
-    updateFormValues,
-    setCurrentStep,
-    formValues,
-    canGoBack,
-  } = useMultiStepForm();
+  const { getValues, setError } = useFormContext<CombinedFormValues>();
+
+  const { nextStep, previousStep, canGoBack } = useMultiStepForm();
 
   const isMobile = useIsMobile();
 
-  const form = useForm<Step1Values>({
-    resolver: zodResolver(Step1Schema),
-    defaultValues: {
-      program: (formValues.program as Step1Values["program"]) || "latam",
-      product: (formValues.product as string) || "Liminar",
-    },
-    mode: "onSubmit",
-  });
+  /**
+   * Validates step 1 form data and progresses to next step
+   * Sets form errors for any validation failures
+   */
+  const handleStepSubmit = async () => {
+    const values = getValues();
 
-  const onSubmit = (values: Step1Values) => {
-    updateFormValues(values);
-    setCurrentStep(2);
-  };
+    const result = Step1Schema.safeParse(values);
 
-  const program = form.watch("program");
-  const product = form.watch("product");
-
-  useEffect(() => {
-    if (program) {
-      const valuesToSave = { program, product };
-      updateFormValues(valuesToSave);
+    if (!result.success) {
+      result.error.issues.forEach((error) => {
+        setError(error.path[0] as keyof CombinedFormValues, {
+          type: "manual",
+          message: error.message,
+        });
+      });
+      return;
     }
-  }, [program, product, updateFormValues]);
 
-  const Companies = {
-    azul: {
-      src: "/images/tudo-azul.png",
-      alt: "AZUL",
-      name: "Tudo Azul",
-    },
-    smiles: {
-      src: "/images/smiles.png",
-      alt: "SMILES",
-      name: "SMILES",
-    },
-    latam: {
-      src: "/images/latam.png",
-      alt: "LATAM",
-      name: "LATAM",
-    },
-    gol: {
-      src: "/images/airportugal.png",
-      alt: "Airportugal",
-      name: "Airportugal",
-    },
+    nextStep();
   };
 
   return (
     <div className="flex flex-col md:flex-row space-y-0 md:space-y-6 lg:space-y-8 gap-0 md:gap-8">
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6 lg:space-y-8 md:mx-auto lg:mx-0"
-        >
-          <Card className="border-border rounded-lg pt-0 lg:max-w-[640px] md:min-w-[640px] pb-0 mb-4 gap-3">
-            <div className="flex items-center gap-2 border-b border-border px-4 py-[11.5px] md:py-[15.5]">
-              <span className="text-primary font-medium text-lg w-7 h-7 flex items-center justify-center">
-                01.
-              </span>
-              <h2 className="text-foreground font-medium text-base sm:text-lg leading-tight">
-                Escolha o programa{" "}
-                <span className="hidden md:inline">de fidelidade</span>
-              </h2>
-            </div>
+      <div className="space-y-6 lg:space-y-8 md:mx-auto lg:mx-0">
+        <Card className="border-border rounded-lg pt-0 lg:max-w-[640px] md:min-w-[640px] pb-0 mb-4 gap-3">
+          <div className="flex items-center gap-2 border-b border-border px-4 py-[11.5px] md:py-[15.5]">
+            <span className="text-primary font-medium text-lg w-7 h-7 flex items-center justify-center">
+              01.
+            </span>
+            <h2 className="text-foreground font-medium text-base sm:text-lg leading-tight">
+              Escolha o programa{" "}
+              <span className="hidden md:inline">de fidelidade</span>
+            </h2>
+          </div>
 
-            {/* Program Selection */}
-            <CardContent className="p-4 pb-0 md:pb-3 pt-0">
-              <FormField
-                control={form.control}
-                name="program"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      {isMobile ? (
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger className="rounded-[44px] border-[#E2E2E2] w-full !h-12">
-                            <div className="flex items-center w-full px-2 gap-4">
-                              <LoadIcon className="w-5 h-5 text-[#1E90FF] flex-shrink-0" />
+          <CardContent className="p-4 pb-0 md:pb-3 pt-0">
+            <FormField
+              name="program"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    {isMobile ? (
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="rounded-[44px] border-border w-full !h-12">
+                          <div className="flex items-center w-full px-2 gap-4">
+                            <LoadIcon className="w-5 h-5 text-primary flex-shrink-0" />
 
-                              <span className="flex-1 text-start">
-                                {field.value && Companies[field.value] ? (
-                                  <span className="text-[#2E3D50] font-medium text-sm">
-                                    {Companies[field.value].name}
-                                  </span>
-                                ) : (
-                                  <span className="text-[#2E3D50] font-medium text-sm">
-                                    Selecione o programa
-                                  </span>
-                                )}
-                              </span>
-
-                              {field.value && Companies[field.value] ? (
-                                <Image
-                                  src={Companies[field.value].src}
-                                  alt={Companies[field.value].alt}
-                                  width={
-                                    Companies[field.value].name ===
-                                    "Airportugal"
-                                      ? 100
-                                      : Companies[field.value].name === "LATAM"
-                                        ? 80
-                                        : Companies[field.value].name ===
-                                            "Tudo Azul"
-                                          ? 65
-                                          : 61
+                            <span className="flex-1 text-start">
+                              {field.value && field.value in Companies ? (
+                                <span className="text-sidebar-foreground font-medium text-sm">
+                                  {
+                                    Companies[
+                                      field.value as keyof typeof Companies
+                                    ].name
                                   }
-                                  height={26}
-                                  className="object-contain"
-                                />
+                                </span>
                               ) : (
-                                <span className="w-[43px] h-5" />
+                                <span className="text-sidebar-foreground font-medium text-sm">
+                                  Selecione o programa
+                                </span>
                               )}
-                            </div>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(Companies).map(([key, company]) => (
-                              <SelectItem key={key} value={key}>
-                                {/* <span className="flex gap-2"> */}
-                                {/* <span className="text-sm font-medium text-[#2E3D50]">
-                                    {company.name}
-                                  </span> */}
-                                <Image
-                                  src={company.src}
-                                  alt={company.alt}
-                                  width={
-                                    company.name === "Airportugal"
-                                      ? 100
-                                      : company.name === "LATAM"
-                                        ? 80
-                                        : company.name === "Tudo Azul"
-                                          ? 65
-                                          : 61
-                                  }
-                                  height={26}
-                                  className="object-contain"
-                                />
-                                {/* </span> */}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <div className="hidden md:grid grid-cols-4 gap-3">
-                          {Object.entries(Companies).map(([key, company]) => {
-                            const isSelected = field.value === key;
-                            return (
-                              <button
-                                key={key}
-                                type="button"
-                                aria-pressed={isSelected}
-                                onClick={() => field.onChange(key)}
-                                className={cn(
-                                  `rounded-full border border-[#E2E2E2] px-4 py-2.5 flex items-center justify-center transition-colors`,
-                                  isSelected
-                                    ? "border-[#1E90FF] bg-blue-50"
-                                    : "hover:bg-gray-50",
-                                )}
-                              >
-                                <Image
-                                  src={company.src}
-                                  alt={company.alt}
-                                  width={
-                                    company.name === "Airportugal"
-                                      ? 200
-                                      : company.name === "LATAM"
-                                        ? 80
-                                        : company.name === "Tudo Azul"
-                                          ? 65
-                                          : 61
-                                  }
-                                  height={26}
-                                  className="object-contain"
-                                />
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
+                            </span>
+
+                            {field.value && field.value in Companies ? (
+                              <Image
+                                src={
+                                  Companies[
+                                    field.value as keyof typeof Companies
+                                  ].src
+                                }
+                                alt={
+                                  Companies[
+                                    field.value as keyof typeof Companies
+                                  ].alt
+                                }
+                                width={
+                                  Companies[
+                                    field.value as keyof typeof Companies
+                                  ].name === "Airportugal"
+                                    ? 100
+                                    : Companies[
+                                          field.value as keyof typeof Companies
+                                        ].name === "LATAM"
+                                      ? 80
+                                      : Companies[
+                                            field.value as keyof typeof Companies
+                                          ].name === "Tudo Azul"
+                                        ? 65
+                                        : 61
+                                }
+                                height={26}
+                                className="object-contain"
+                              />
+                            ) : (
+                              <span className="w-[43px] h-5" />
+                            )}
+                          </div>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(Companies).map(([key, company]) => (
+                            <SelectItem key={key} value={key}>
+                              <Image
+                                src={company.src}
+                                alt={company.alt}
+                                width={
+                                  company.name === "Airportugal"
+                                    ? 100
+                                    : company.name === "LATAM"
+                                      ? 80
+                                      : company.name === "Tudo Azul"
+                                        ? 65
+                                        : 61
+                                }
+                                height={26}
+                                className="object-contain"
+                              />
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="hidden md:grid grid-cols-4 gap-3">
+                        {Object.entries(Companies).map(([key, company]) => {
+                          const isSelected = field.value === key;
+                          return (
+                            <button
+                              key={key}
+                              type="button"
+                              aria-pressed={isSelected}
+                              onClick={() => field.onChange(key)}
+                              className={cn(
+                                `rounded-full border border-border px-4 py-2.5 flex items-center justify-center transition-colors`,
+                                isSelected
+                                  ? "border-primary bg-blue-50"
+                                  : "hover:bg-gray-50",
+                              )}
+                            >
+                              <Image
+                                src={company.src}
+                                alt={company.alt}
+                                width={
+                                  company.name === "Airportugal"
+                                    ? 200
+                                    : company.name === "LATAM"
+                                      ? 80
+                                      : company.name === "Tudo Azul"
+                                        ? 65
+                                        : 61
+                                }
+                                height={26}
+                                className="object-contain"
+                              />
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+
+          <CardContent className="px-4 pb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <FormField
+                name="product"
+                render={({ field }) => (
+                  <FormItem className="relative">
+                    <Label className="text-foreground font-medium text-sm sm:text-base leading-tight">
+                      Produto
+                    </Label>
+                    <FormControl>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger className="rounded-full w-full !h-12">
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Liminar">Liminar</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="absolute bottom-0 left-0 right-0" />
                   </FormItem>
                 )}
               />
-            </CardContent>
 
-            {/* Product and CPF info */}
-            <CardContent className="px-4 pb-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <FormField
-                  control={form.control}
-                  name="product"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Label className="text-foreground font-medium text-sm sm:text-base leading-tight">
-                        Produto
-                      </Label>
-                      <FormControl>
-                        <Select
-                          value={field.value}
-                          onValueChange={field.onChange}
-                        >
-                          <SelectTrigger className="rounded-full w-full !h-12">
-                            <SelectValue placeholder="Selecione" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Liminar">Liminar</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="space-y-1">
-                  <Label className="text-foreground font-medium text-sm sm:text-base leading-tight">
-                    CPF's Disponíveis
-                  </Label>
-                  <div className="bg-muted border border-border rounded-full px-4 py-2.5 flex items-center justify-between h-12">
-                    <span className="text-muted-foreground font-medium text-sm">
-                      Ilimitado
-                    </span>
-                    <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-                  </div>
+              <div className="space-y-2">
+                <Label className="text-foreground font-medium text-sm sm:text-base leading-tight">
+                  CPF's Disponíveis
+                </Label>
+                <div className="bg-muted border border-border rounded-full px-4 py-2.5 flex items-center justify-between h-12">
+                  <span className="text-muted-foreground font-medium text-sm">
+                    Ilimitado
+                  </span>
+                  <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-          <ProgramCard
-            accordion={false}
-            className="hidden md:flex 2xl:hidden"
-          />
+        <ProgramCard accordion={false} className="hidden md:flex 2xl:hidden" />
 
-          <div className="justify-between hidden lg:flex">
-            <Button
-              className={cn(
-                "rounded-full has-[>svg]:px-[26px] h-10 min-w-[142px]",
-                !canGoBack && "invisible",
-              )}
-              variant="outline"
-              disabled={!canGoBack}
-              onClick={() => setCurrentStep(currentStep - 1)}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Voltar
-            </Button>
+        <div className="justify-between hidden lg:flex">
+          <Button
+            className={cn(
+              "rounded-full has-[>svg]:px-[26px] h-10 min-w-[142px]",
+              !canGoBack && "invisible",
+            )}
+            variant="outline"
+            disabled={!canGoBack}
+            onClick={previousStep}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+          </Button>
 
-            <Button
-              type="submit"
-              className="rounded-full has-[>svg]:px-[27px] h-10 min-w-[142px]"
-            >
-              Prosseguir
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </form>
-      </Form>
+          <Button
+            onClick={handleStepSubmit}
+            className="rounded-full has-[>svg]:px-[27px] h-10 min-w-[142px]"
+          >
+            Prosseguir
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
 
       <ProgramCard accordion={true} className="md:hidden 2xl:flex" />
     </div>
   );
 }
 
+/**
+ * Program information card with optional accordion for mobile
+ * @param accordion - Whether to show accordion interface (mobile only)
+ * @param className - Additional CSS classes
+ */
 function ProgramCard({
   accordion,
   className,
@@ -337,7 +315,7 @@ function ProgramCard({
                 </h3>
               </AccordionTrigger>
               <AccordionContent className="px-0 pt-2 pb-1">
-                <p className="text-xs leading-relaxed text-[#475569]">
+                <p className="text-xs leading-relaxed text-secondary-foreground">
                   Escolha de qual programa de fidelidade você quer vender suas
                   milhas. Use apenas contas em seu nome.
                 </p>
@@ -352,6 +330,10 @@ function ProgramCard({
   );
 }
 
+/**
+ * Program card text content for desktop view
+ * Provides instructions for program selection
+ */
 function ProgramCardText() {
   return (
     <div className="flex-col gap-2 hidden md:flex">
@@ -360,7 +342,7 @@ function ProgramCardText() {
           Selecione o programa
         </h3>
       </div>
-      <p className="text-xs leading-relaxed text-[#475569]">
+      <p className="text-xs leading-relaxed text-secondary-foreground">
         Escolha de qual programa de fidelidade você quer vender suas milhas. Use
         apenas contas em seu nome.
       </p>

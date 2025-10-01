@@ -108,9 +108,6 @@ const CountrySelect = ({
           className="flex gap-1 rounded-e-none rounded-s-[40px] border-r-0 px-3 focus:z-10 bg-[#F3F3F3] h-12 border-0 focus:ring-0 focus:outline-none"
           disabled={disabled}
         >
-          <span className="text-[#2E3D50] font-mono text-sm font-medium">
-            +{RPNInput.getCountryCallingCode(selectedCountry)}
-          </span>
           <FlagComponent
             country={selectedCountry}
             countryName={selectedCountry}

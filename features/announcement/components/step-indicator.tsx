@@ -1,10 +1,17 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { steps } from "@/features/announcement/constants";
 import { useMultiStepForm } from "@/features/announcement/ctx";
 import type { StepProps } from "@/features/announcement/types";
 import { cn } from "@/lib/utils";
 
+/**
+ * Individual step item component with visual state indicators
+ * Shows completion status, active state, and clickable navigation
+ * @param isClickable - Whether step can be clicked for navigation
+ * @param onClick - Handler for step click navigation
+ */
 function StepItem({
   stepNumber,
   title,
@@ -15,14 +22,17 @@ function StepItem({
   isFirst,
   currentStep,
   onClick,
+  isClickable,
 }: StepProps) {
   return (
     <Card
       className={cn(
-        "bg-transparent border-0 rounded-lg p-0 shadow-none cursor-pointer transition-colors hover:bg-neutral-50",
+        "bg-transparent border-0 rounded-lg p-0 shadow-none transition-colors",
+        isClickable && "cursor-pointer hover:bg-neutral-50",
+        !isClickable && "cursor-not-allowed opacity-60",
         isActive && "bg-neutral-100",
       )}
-      onClick={onClick}
+      onClick={isClickable ? onClick : undefined}
     >
       <CardContent
         className={cn(
@@ -39,7 +49,7 @@ function StepItem({
             <div
               className={cn(
                 "w-0.5 h-8",
-                stepNumber <= currentStep ? "bg-[#1E90FF]" : "bg-[#F0F0F0]",
+                stepNumber <= currentStep ? "bg-primary" : "bg-neutral-200",
               )}
             ></div>
           )}
@@ -49,20 +59,20 @@ function StepItem({
             className={cn(
               "w-8 h-8 rounded-full flex items-center justify-center",
               isActive
-                ? "bg-white border border-[#1E90FF] shadow-[0_0_0_3.83px_rgba(30,144,255,0.25)]"
+                ? "bg-background border border-primary shadow-[0_0_0_3.83px_rgba(30,144,255,0.25)]"
                 : isCompleted
-                  ? "border border-[#1E90FF] bg-[#1E90FF]"
-                  : "bg-white border border-[#F0F0F0]",
+                  ? "border border-primary bg-primary"
+                  : "bg-background border border-neutral-200",
             )}
           >
             <div
               className={cn(
                 "w-2.5 h-2.5 rounded-full",
                 isActive
-                  ? "bg-[#1E90FF]"
+                  ? "bg-primary"
                   : isCompleted
-                    ? "bg-background"
-                    : "bg-[#F0F0F0]",
+                    ? "bg-neutral-200"
+                    : "bg-neutral-200",
               )}
             ></div>
           </div>
@@ -72,7 +82,7 @@ function StepItem({
             <div
               className={cn(
                 "w-0.5 h-8",
-                stepNumber < currentStep ? "bg-[#1E90FF]" : "bg-[#F0F0F0]",
+                stepNumber < currentStep ? "bg-primary" : "bg-neutral-200",
               )}
             ></div>
           )}
@@ -84,9 +94,9 @@ function StepItem({
             className={cn(
               "font-medium text-base leading-none font-['DM_Sans']",
               isActive
-                ? "text-[#475569]"
+                ? "text-secondary-foreground"
                 : isCompleted
-                  ? "text-[#475569]"
+                  ? "text-secondary-foreground"
                   : "text-neutral-300",
             )}
           >
@@ -94,11 +104,11 @@ function StepItem({
           </h3>
           <p
             className={cn(
-              "text-xs mt-0.5 leading-[1.6] font-['DM_Sans']",
+              "text-sm mt-0.5 leading-[1.6] font-['DM_Sans']",
               isActive
-                ? "text-[#475569]"
+                ? "text-secondary-foreground"
                 : isCompleted
-                  ? "text-[#475569]"
+                  ? "text-secondary-foreground"
                   : "text-neutral-300",
             )}
           >
@@ -110,52 +120,55 @@ function StepItem({
   );
 }
 
+/**
+ * Step indicator component for multi-step form navigation
+ * Renders clickable step items with validation-based navigation logic
+ * Only allows forward navigation when current step is valid
+ */
 export function StepIndicator() {
-  const { currentStep, setCurrentStep } = useMultiStepForm();
-  const steps = [
-    {
-      stepNumber: 1,
-      title: "Passo 1",
-      description: "Escolha a companhia aérea",
-      isFirst: true,
-    },
-    {
-      stepNumber: 2,
-      title: "Passo 2",
-      description: "Oferte suas milhas",
-    },
-    {
-      stepNumber: 3,
-      title: "Passo 3",
-      description: "Insira os dados do programa",
-    },
-    {
-      stepNumber: 4,
-      title: "Passo 4",
-      description: "Pedido finalizado",
-      isLast: true,
-    },
-  ];
+  const { currentStep, setCurrentStep, isStepValid } = useMultiStepForm();
 
+  /**
+   * Handles step click navigation with validation checks
+   * Allows going back to any previous step or forward only if current step is valid
+   * @param stepNumber - Target step number to navigate to
+   */
   const handleStepClick = (stepNumber: number) => {
-    // Only allow navigation to completed steps or the next step
-    if (stepNumber <= currentStep || stepNumber === currentStep + 1) {
+    if (stepNumber < currentStep) {
       setCurrentStep(stepNumber);
+      return;
+    }
+
+    if (stepNumber === currentStep + 1 && isStepValid(currentStep)) {
+      setCurrentStep(stepNumber);
+      return;
+    }
+
+    if (stepNumber === currentStep) {
+      return;
     }
   };
 
   return (
     <div className="w-full max-w-xs">
-      {steps.map((step) => (
-        <StepItem
-          key={step.stepNumber}
-          {...step}
-          isActive={currentStep === step.stepNumber}
-          isCompleted={currentStep > step.stepNumber}
-          currentStep={currentStep}
-          onClick={() => handleStepClick(step.stepNumber)}
-        />
-      ))}
+      {steps.map((step) => {
+        const isClickable =
+          step.stepNumber < currentStep ||
+          (step.stepNumber === currentStep + 1 && isStepValid(currentStep)) ||
+          step.stepNumber === currentStep;
+
+        return (
+          <StepItem
+            key={step.stepNumber}
+            {...step}
+            isActive={currentStep === step.stepNumber}
+            isCompleted={currentStep > step.stepNumber}
+            currentStep={currentStep}
+            onClick={() => handleStepClick(step.stepNumber)}
+            isClickable={isClickable}
+          />
+        );
+      })}
     </div>
   );
 }

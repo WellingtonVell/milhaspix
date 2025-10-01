@@ -13,17 +13,15 @@ import { useMultiStepForm } from "@/features/announcement/ctx";
 export default function Home() {
   const { currentStep, totalSteps } = useMultiStepForm();
 
-  // Calculate progress percentage
   const progress = (currentStep / totalSteps) * 100;
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <Header />
 
-      {/* Progress Bar */}
       <div className="w-full bg-gray-200 h-1">
         <motion.div
-          className="h-1 bg-[#1E90FF]"
+          className="h-1 bg-primary"
           initial={{ width: "0%" }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 0.3, ease: "easeInOut" }}

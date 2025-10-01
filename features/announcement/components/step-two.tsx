@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
   ArrowRight,
@@ -8,9 +7,8 @@ import {
   ChevronsDown,
   Plane,
 } from "lucide-react";
-import { useEffect, useReducer } from "react";
-import { useForm } from "react-hook-form";
-import type { z } from "zod";
+import { useReducer } from "react";
+import { useFormContext } from "react-hook-form";
 import {
   Accordion,
   AccordionContent,
@@ -20,7 +18,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import {
-  Form,
   FormControl,
   FormDescription,
   FormField,
@@ -40,17 +37,13 @@ import {
 import { useMultiStepForm } from "@/features/announcement/ctx";
 import { useRankingData } from "@/features/announcement/queries";
 import { Step2Schema } from "@/features/announcement/schemas";
-import type { Step2Values } from "@/features/announcement/types";
+import type {
+  CombinedFormValues,
+  RankingItem,
+} from "@/features/announcement/types";
 import { cn } from "@/lib/utils";
 
-type Step2FormValues = z.input<typeof Step2Schema>;
-
-interface RankingItem {
-  mile_value: number;
-  description: string;
-  position: number;
-}
-
+// Brazilian currency formatter for price display
 const moneyFormatter = Intl.NumberFormat("pt-BR", {
   currency: "BRL",
   currencyDisplay: "symbol",
@@ -60,38 +53,35 @@ const moneyFormatter = Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 2,
 });
 
+/**
+ * Step 2: Mile offering and pricing configuration
+ * Handles complex pricing validation, ranking data, and optional passenger averages
+ * Features real-time validation feedback and competitive ranking display
+ */
 export function StepTwo() {
   const {
-    updateFormValues,
-    setCurrentStep,
-    formValues,
-    canGoBack,
-    currentStep,
-  } = useMultiStepForm();
+    getValues,
+    setError,
+    formState: { errors },
+    watch,
+    setValue,
+  } = useFormContext<CombinedFormValues>();
 
-  const form = useForm<Step2FormValues>({
-    resolver: zodResolver(Step2Schema),
-    defaultValues: {
-      payoutTiming:
-        (formValues.payoutTiming as Step2Values["payoutTiming"]) || "imediato",
-      milesOffered: (formValues.milesOffered as number) || 10000,
-      valuePerThousand: (formValues.valuePerThousand as number) || undefined,
-      averagePerPassengerEnabled:
-        (formValues.averagePerPassengerEnabled as boolean) || false,
-      averageMilesPerPassenger:
-        (formValues.averageMilesPerPassenger as number) || undefined,
-    },
-    mode: "onChange",
-  });
+  const { nextStep, previousStep, canGoBack } = useMultiStepForm();
 
-  const valuePerThousand = form.watch("valuePerThousand");
-  const milesOffered = form.watch("milesOffered");
+  const valuePerThousand = watch("valuePerThousand");
+  const milesOffered = watch("milesOffered");
   const {
     data: rankingData = [],
     isLoading: isLoadingRanking,
     error: rankingError,
   } = useRankingData(Number(valuePerThousand) || undefined);
 
+  /**
+   * Calculates recommended average miles per passenger based on offering
+   * Uses business logic with adjustment factor for higher-value offers
+   * @returns Recommended average miles per passenger
+   */
   const calculateBestAverage = () => {
     const miles = Number(milesOffered) || 0;
     const value = Number(valuePerThousand) || 0;
@@ -109,10 +99,11 @@ export function StepTwo() {
 
   const bestAverage = calculateBestAverage();
 
-  const initialCurrencyValue = form.watch("valuePerThousand")
-    ? moneyFormatter.format(Number(form.watch("valuePerThousand")))
+  const initialCurrencyValue = watch("valuePerThousand")
+    ? moneyFormatter.format(Number(watch("valuePerThousand")))
     : "";
 
+  // Currency input formatter that converts raw input to Brazilian currency format
   const [displayValue, setDisplayValue] = useReducer(
     (_: string, next: string) => {
       const digits = next.replace(/\D/g, "");
@@ -122,347 +113,314 @@ export function StepTwo() {
     initialCurrencyValue,
   );
 
-  const onSubmit = (values: Step2FormValues) => {
-    try {
-      const parsed: Step2Values = Step2Schema.parse(values);
-      updateFormValues(parsed);
-      setCurrentStep(3);
-    } catch (error) {
-      console.error("Step 2 - Validation error:", error);
+  /**
+   * Validates step 2 form data and progresses to next step
+   * Handles complex validation including conditional passenger average requirements
+   */
+  const handleStepSubmit = async () => {
+    const values = getValues();
+
+    const result = Step2Schema.safeParse(values);
+
+    if (!result.success) {
+      result.error.issues.forEach((error) => {
+        setError(error.path[0] as keyof CombinedFormValues, {
+          type: "manual",
+          message: error.message,
+        });
+      });
+      return;
     }
+
+    nextStep();
   };
-
-  const payoutTiming = form.watch("payoutTiming");
-  const averagePerPassengerEnabled = form.watch("averagePerPassengerEnabled");
-  const averageMilesPerPassenger = form.watch("averageMilesPerPassenger");
-
-  useEffect(() => {
-    const hasValues = milesOffered || valuePerThousand;
-    if (hasValues) {
-      const valuesToSave = {
-        milesOffered,
-        valuePerThousand,
-        payoutTiming,
-        averagePerPassengerEnabled,
-        averageMilesPerPassenger,
-      };
-      updateFormValues(valuesToSave);
-    }
-  }, [
-    milesOffered,
-    valuePerThousand,
-    payoutTiming,
-    averagePerPassengerEnabled,
-    averageMilesPerPassenger,
-    updateFormValues,
-  ]);
 
   return (
     <div className="flex flex-col md:flex-row space-y-0 md:space-y-6 lg:space-y-8 gap-0 md:gap-8">
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6 lg:space-y-8 md:mx-auto lg:mx-0"
-        >
-          <Card className="border-border rounded-lg pt-0 lg:max-w-[640px] md:min-w-[640px] pb-0 mb-4 gap-3">
-            <div className="flex items-center gap-2 justify-between border-b border-border px-4 py-[11.5px] md:py-[15.5]">
-              <div className="flex items-center gap-2">
-                <span className="text-primary font-medium text-lg w-7 h-7 flex items-center justify-center">
-                  02.
-                </span>
-                <h2 className="text-foreground font-medium text-base sm:text-lg leading-tight">
-                  Oferte suas milhas
-                </h2>
-              </div>
-              <div className="hidden 2xl:flex">
-                {form.formState.errors.valuePerThousand && (
-                  <p className="text-sm text-red-500 font-medium">
-                    Escolha entre{" "}
-                    {moneyFormatter.format(VALUE_PER_THOUSAND_MIN)} e{" "}
-                    {moneyFormatter.format(VALUE_PER_THOUSAND_MAX)}
-                  </p>
-                )}
-              </div>
+      <div className="space-y-6 lg:space-y-8 md:mx-auto lg:mx-0">
+        <Card className="border-border rounded-lg pt-0 lg:max-w-[640px] md:min-w-[640px] pb-0 mb-4 gap-3">
+          <div className="flex items-center gap-2 justify-between border-b border-border px-4 py-[11.5px] md:py-[15.5]">
+            <div className="flex items-center gap-2">
+              <span className="text-primary font-medium text-lg w-7 h-7 flex items-center justify-center">
+                02.
+              </span>
+              <h2 className="text-foreground font-medium text-base sm:text-lg leading-tight">
+                Oferte suas milhas
+              </h2>
+            </div>
+            <div className="hidden 2xl:flex">
+              {errors.valuePerThousand && (
+                <p className="text-sm text-destructive font-medium">
+                  Escolha entre {moneyFormatter.format(VALUE_PER_THOUSAND_MIN)}{" "}
+                  e {moneyFormatter.format(VALUE_PER_THOUSAND_MAX)}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <CardContent className="p-4 space-y-4">
+            <FormField
+              name="payoutTiming"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Quero receber</FormLabel>
+                  <FormControl>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        { label: "Imediato", value: "imediato" },
+                        { label: "em 2 dias", value: "2dias" },
+                        { label: "em 7 dias", value: "7dias" },
+                        { label: "Depois do voo", value: "posVoo" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => field.onChange(opt.value)}
+                          className={cn(
+                            `rounded-full border px-4 py-2 text-sm min-h-[44px] ${
+                              field.value === opt.value
+                                ? "border-primary text-foreground"
+                                : "border-muted text-foreground"
+                            }`,
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="grid sm:grid-cols-2 gap-4 mb-6">
+              <FormField
+                name="milesOffered"
+                render={({ field }) => {
+                  const formatNumber = (value: unknown) => {
+                    if (!value) return "";
+                    const num =
+                      typeof value === "string"
+                        ? parseFloat(value)
+                        : Number(value);
+                    if (Number.isNaN(num)) return "";
+                    return num.toLocaleString("pt-BR");
+                  };
+
+                  const parseNumber = (value: string) => {
+                    const cleaned = value.replace(/\./g, "");
+                    const num = parseFloat(cleaned);
+                    return Number.isNaN(num) ? 0 : num;
+                  };
+
+                  return (
+                    <FormItem className="relative mb-2 md:mb-0">
+                      <FormLabel>Milhas ofertadas</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type="tel"
+                            inputMode="numeric"
+                            value={formatNumber(field.value)}
+                            onChange={(e) => {
+                              const parsed = parseNumber(e.target.value);
+                              field.onChange(parsed);
+                            }}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            className="rounded-full w-full !h-[44px] pr-12 text-start font-mono"
+                            placeholder="10.000"
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                            <Plane className="w-5 h-5 text-primary" />
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormMessage className="absolute -bottom-5 left-0 right-0" />
+                    </FormItem>
+                  );
+                }}
+              />
+
+              <FormField
+                name="valuePerThousand"
+                render={({ field }) => {
+                  const handleChange = (
+                    e: React.ChangeEvent<HTMLInputElement>,
+                  ) => {
+                    const formattedValue = e.target.value;
+                    setDisplayValue(formattedValue);
+
+                    const digits = formattedValue.replace(/\D/g, "");
+                    const realValue = Number(digits) / 100;
+                    field.onChange(realValue || "");
+                  };
+
+                  const currentValue = Number(field.value) || 0;
+                  const isValid =
+                    currentValue >= VALUE_PER_THOUSAND_MIN &&
+                    currentValue <= VALUE_PER_THOUSAND_MAX;
+                  const isAboveMax = currentValue > VALUE_PER_THOUSAND_MAX;
+                  const isBelowMin =
+                    currentValue > 0 && currentValue < VALUE_PER_THOUSAND_MIN;
+                  const hasValue = currentValue > 0;
+
+                  return (
+                    <FormItem className="relative mb-2 md:mb-0">
+                      <FormLabel>Valor a cada 1.000 milhas (R$)</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            type="text"
+                            inputMode="decimal"
+                            value={displayValue}
+                            onChange={handleChange}
+                            onBlur={field.onBlur}
+                            name={field.name}
+                            ref={field.ref}
+                            className="rounded-full w-full !h-[44px] pr-12 text-start font-mono"
+                            placeholder="R$ 25,00"
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                            {hasValue ? (
+                              isValid ? (
+                                <Check className="w-4 h-4 text-green-500 transition-all duration-300 rotate-0 scale-100" />
+                              ) : (
+                                <ChevronsDown
+                                  className={`w-4 h-4 transition-all duration-300 ${
+                                    isAboveMax
+                                      ? "text-destructive rotate-0"
+                                      : isBelowMin
+                                        ? "text-destructive rotate-180"
+                                        : "text-muted-foreground rotate-0"
+                                  }`}
+                                />
+                              )
+                            ) : null}
+                          </div>
+                        </div>
+                      </FormControl>
+                    </FormItem>
+                  );
+                }}
+              />
             </div>
 
-            <CardContent className="p-4 space-y-4">
-              <FormField
-                control={form.control}
-                name="payoutTiming"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quero receber</FormLabel>
+            <FormField
+              name="averagePerPassengerEnabled"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center gap-3">
                     <FormControl>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        {[
-                          { label: "Imediato", value: "imediato" },
-                          { label: "em 2 dias", value: "2dias" },
-                          { label: "em 7 dias", value: "7dias" },
-                          { label: "Depois do voo", value: "posVoo" },
-                        ].map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => field.onChange(opt.value)}
-                            className={cn(
-                              `rounded-full border px-4 py-2 text-sm min-h-[44px] ${
-                                field.value === opt.value
-                                  ? "border-primary text-foreground"
-                                  : "border-muted text-foreground"
-                              }`,
-                            )}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
+                      <Switch
+                        checked={field.value || false}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          if (!checked) {
+                            setValue("averageMilesPerPassenger", undefined);
+                          }
+                        }}
+                        className="h-6 w-11 [&_[data-slot=switch-thumb]]:size-5 [&_[data-slot=switch-thumb]]:data-[state=checked]:translate-x-[calc(99%)]"
+                      />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                    <FormLabel className="text-muted-foreground font-medium text-base leading-tight">
+                      Definir média de milhas por passageiro
+                    </FormLabel>
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <div className="grid sm:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="milesOffered"
-                  render={({ field }) => {
-                    const formatNumber = (value: unknown) => {
-                      if (!value) return "";
-                      const num =
-                        typeof value === "string"
-                          ? parseFloat(value)
-                          : Number(value);
-                      if (Number.isNaN(num)) return "";
-                      return num.toLocaleString("pt-BR");
-                    };
-
-                    const parseNumber = (value: string) => {
-                      const cleaned = value.replace(/\./g, "");
-                      const num = parseFloat(cleaned);
-                      return Number.isNaN(num) ? 0 : num;
-                    };
-
-                    return (
-                      <FormItem>
-                        <FormLabel>Milhas ofertadas</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              type="tel"
-                              inputMode="numeric"
-                              value={formatNumber(field.value)}
-                              onChange={(e) => {
-                                const parsed = parseNumber(e.target.value);
-                                field.onChange(parsed);
-                              }}
-                              onBlur={field.onBlur}
-                              name={field.name}
-                              ref={field.ref}
-                              className="rounded-full w-full !h-[44px] pr-12 text-start font-mono"
-                              placeholder="10.000"
-                            />
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                              <Plane className="w-5 h-5 text-primary" />
-                            </div>
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="valuePerThousand"
-                  render={({ field }) => {
-                    const handleChange = (
-                      e: React.ChangeEvent<HTMLInputElement>,
-                    ) => {
-                      const formattedValue = e.target.value;
-                      setDisplayValue(formattedValue);
-
-                      const digits = formattedValue.replace(/\D/g, "");
-                      const realValue = Number(digits) / 100;
-                      field.onChange(realValue || "");
-                    };
-
-                    const currentValue = Number(field.value) || 0;
-                    const isValid =
-                      currentValue >= VALUE_PER_THOUSAND_MIN &&
-                      currentValue <= VALUE_PER_THOUSAND_MAX;
-                    const isAboveMax = currentValue > VALUE_PER_THOUSAND_MAX;
-                    const isBelowMin =
-                      currentValue > 0 && currentValue < VALUE_PER_THOUSAND_MIN;
-                    const hasValue = currentValue > 0;
-
-                    return (
-                      <FormItem>
-                        <FormLabel>Valor a cada 1.000 milhas (R$)</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <Input
-                              type="text"
-                              inputMode="decimal"
-                              value={displayValue}
-                              onChange={handleChange}
-                              onBlur={field.onBlur}
-                              name={field.name}
-                              ref={field.ref}
-                              className="rounded-full w-full !h-[44px] pr-12 text-start font-mono"
-                              placeholder="R$ 25,00"
-                            />
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                              {hasValue ? (
-                                isValid ? (
-                                  <Check className="w-4 h-4 text-green-500 transition-all duration-300 rotate-0 scale-100" />
-                                ) : (
-                                  <ChevronsDown
-                                    className={`w-4 h-4 transition-all duration-300 ${
-                                      isAboveMax
-                                        ? "text-red-500 rotate-0"
-                                        : isBelowMin
-                                          ? "text-red-500 rotate-180"
-                                          : "text-muted-foreground rotate-0"
-                                    }`}
-                                  />
-                                )
-                              ) : null}
-                            </div>
-                          </div>
-                        </FormControl>
-                      </FormItem>
-                    );
-                  }}
-                />
-              </div>
-
-              {/* Average Per Passenger Switch */}
+            {watch("averagePerPassengerEnabled") && (
               <FormField
-                control={form.control}
-                name="averagePerPassengerEnabled"
+                name="averageMilesPerPassenger"
                 render={({ field }) => (
                   <FormItem>
-                    <div className="flex items-center gap-3">
-                      <FormControl>
-                        <Switch
-                          checked={field.value || false}
-                          onCheckedChange={(checked) => {
-                            field.onChange(checked);
-                            if (!checked) {
-                              form.setValue(
-                                "averageMilesPerPassenger",
-                                undefined,
-                              );
-                            }
-                          }}
-                          className="h-6 w-11 [&_[data-slot=switch-thumb]]:size-5 [&_[data-slot=switch-thumb]]:data-[state=checked]:translate-x-[calc(99%)]"
-                        />
-                      </FormControl>
-                      <FormLabel className="text-[#8F8F8F] font-medium text-base leading-tight">
-                        Definir média de milhas por passageiro
-                      </FormLabel>
-                    </div>
+                    <FormLabel>Média de milhas por passageiro</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="tel"
+                        {...field}
+                        value={field.value?.toString() || ""}
+                        onChange={(e) =>
+                          field.onChange(Number(e.target.value) || undefined)
+                        }
+                        className="rounded-full w-full !h-12"
+                        placeholder="Ex: 5000"
+                        maxLength={10}
+                      />
+                    </FormControl>
+
+                    {!errors.averageMilesPerPassenger && (
+                      <FormDescription className="text-success">
+                        Melhor média para a sua oferta:{" "}
+                        <span className="font-semibold">
+                          {bestAverage.toLocaleString("pt-BR")}
+                        </span>
+                      </FormDescription>
+                    )}
+
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            )}
 
-              {/* Average Miles Per Passenger Input - Only show when switch is enabled */}
-              {form.watch("averagePerPassengerEnabled") && (
-                <FormField
-                  control={form.control}
-                  name="averageMilesPerPassenger"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Média de milhas por passageiro</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="tel"
-                          {...field}
-                          value={field.value?.toString() || ""}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value) || 0)
-                          }
-                          className="rounded-full w-full !h-12"
-                          placeholder="Ex: 5000"
-                        />
-                      </FormControl>
-
-                      {!form.formState.errors.averageMilesPerPassenger && (
-                        <FormDescription className="text-[#12A19A]">
-                          Melhor média para a sua oferta:{" "}
-                          <span className="font-semibold">
-                            {bestAverage.toLocaleString("pt-BR")}
-                          </span>
-                        </FormDescription>
-                      )}
-
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            <div className="space-y-2">
+              {errors.valuePerThousand && (
+                <p className="text-sm text-destructive font-medium flex 2xl:hidden">
+                  Escolha entre {moneyFormatter.format(VALUE_PER_THOUSAND_MIN)}{" "}
+                  e {moneyFormatter.format(VALUE_PER_THOUSAND_MAX)}
+                </p>
               )}
 
-              {/* Ranking Badges Section */}
-              <div className="space-y-2">
-                {form.formState.errors.valuePerThousand && (
-                  <p className="text-sm text-red-500 font-medium flex 2xl:hidden">
-                    Escolha entre{" "}
-                    {moneyFormatter.format(VALUE_PER_THOUSAND_MIN)} e{" "}
-                    {moneyFormatter.format(VALUE_PER_THOUSAND_MAX)}
-                  </p>
-                )}
+              <RankingBadges
+                rankingData={rankingData}
+                isLoadingRanking={isLoadingRanking}
+                error={rankingError}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-                <RankingBadges
-                  form={form}
-                  rankingData={rankingData}
-                  isLoadingRanking={isLoadingRanking}
-                  error={rankingError}
-                />
-              </div>
-            </CardContent>
-          </Card>
+        <MilhasCard
+          accordion={false}
+          className="hidden md:flex 2xl:hidden"
+          rankingData={rankingData}
+          isLoadingRanking={isLoadingRanking}
+          error={rankingError}
+        />
 
-          <MilhasCard
-            accordion={false}
-            className="hidden md:flex 2xl:hidden"
-            form={form}
-            rankingData={rankingData}
-            isLoadingRanking={isLoadingRanking}
-            error={rankingError}
-          />
+        <div className="justify-between hidden lg:flex">
+          <Button
+            variant="outline"
+            className={cn(
+              "rounded-full has-[>svg]:px-[26px] h-10 min-w-[112px]",
+              !canGoBack && "invisible",
+            )}
+            disabled={!canGoBack}
+            onClick={previousStep}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar
+          </Button>
 
-          <div className="justify-between hidden lg:flex">
-            <Button
-              variant="outline"
-              className={cn(
-                "rounded-full has-[>svg]:px-[26px] h-10 min-w-[112px]",
-                !canGoBack && "invisible",
-              )}
-              disabled={!canGoBack}
-              onClick={() => setCurrentStep(currentStep - 1)}
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Voltar
-            </Button>
-
-            <Button
-              type="submit"
-              className="rounded-full has-[>svg]:px-[27px] h-10 min-w-[142px]"
-            >
-              Prosseguir
-              <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </form>
-      </Form>
+          <Button
+            onClick={handleStepSubmit}
+            className="rounded-full has-[>svg]:px-[27px] h-10 min-w-[142px]"
+          >
+            Prosseguir
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
 
       <MilhasCard
         accordion={true}
         className="md:hidden 2xl:flex"
-        form={form}
         rankingData={rankingData}
         isLoadingRanking={isLoadingRanking}
         error={rankingError}
@@ -471,23 +429,28 @@ export function StepTwo() {
   );
 }
 
+/**
+ * Mile information card with ranking data and estimated value
+ * @param accordion - Whether to show accordion interface (mobile only)
+ * @param rankingData - Competitive ranking data from API
+ * @param isLoadingRanking - Loading state for ranking data
+ * @param error - Error state for ranking data fetch
+ */
 function MilhasCard({
   accordion,
   className,
-  form,
   rankingData,
   isLoadingRanking,
   error,
 }: {
   accordion: boolean;
   className?: string;
-  form: ReturnType<typeof useForm<Step2FormValues>>;
   rankingData: RankingItem[];
   isLoadingRanking: boolean;
   error: Error | null;
 }) {
   return (
-    <div className={cn("flex flex-col gap-8", className)}>
+    <div className={cn("flex flex-col gap-4", className)}>
       <Card className={cn("border-border rounded-lg p-2 h-fit", className)}>
         <CardContent className="p-3">
           {accordion && (
@@ -504,7 +467,7 @@ function MilhasCard({
                   </h3>
                 </AccordionTrigger>
                 <AccordionContent className="px-0 pt-2 pb-1">
-                  <p className="text-xs leading-relaxed text-[#475569]">
+                  <p className="text-xs leading-relaxed text-secondary-foreground">
                     Ao vender mais de 20.000 milhas, ative as Opções Avançadas
                     para definir a média de milhas por emissão.
                   </p>
@@ -520,7 +483,6 @@ function MilhasCard({
       <div className="hidden 2xl:flex flex-col gap-2">
         <Label>Ranking das ofertas</Label>
         <RankingCard
-          form={form}
           rankingData={rankingData}
           isLoadingRanking={isLoadingRanking}
           error={error}
@@ -529,25 +491,26 @@ function MilhasCard({
 
       <Separator className="w-full hidden 2xl:block" />
 
-      <EstimatedValue form={form} />
+      <EstimatedValue />
     </div>
   );
 }
 
-function EstimatedValue({
-  form,
-}: {
-  form: ReturnType<typeof useForm<Step2FormValues>>;
-}) {
-  const milesOffered = Number(form.watch("milesOffered")) || 0;
-  const valuePerThousand = Number(form.watch("valuePerThousand")) || 0;
+/**
+ * Displays estimated value calculation based on miles offered and price per thousand
+ * Shows different layouts for mobile (bottom fixed) and desktop (inline)
+ */
+function EstimatedValue() {
+  const { watch } = useFormContext<CombinedFormValues>();
+  const milesOffered = Number(watch("milesOffered")) || 0;
+  const valuePerThousand = Number(watch("valuePerThousand")) || 0;
   const estimatedValue = (milesOffered / 1000) * valuePerThousand;
 
   return (
     <div>
       <div className="lg:block flex-col gap-2 hidden">
         <Label className="text-lg font-medium">Receba até:</Label>
-        <Card className="py-4 flex flex-row items-center justify-between bg-[#12A19A1A] text-[#12A19A] text-lg font-medium">
+        <Card className="py-4 flex flex-row items-center justify-between bg-success/10 text-success text-lg font-medium">
           <CardContent>R$</CardContent>
           <CardContent>
             {estimatedValue.toLocaleString("pt-BR", {
@@ -558,7 +521,7 @@ function EstimatedValue({
         </Card>
       </div>
       <div className="flex flex-col gap-2 lg:hidden absolute bottom-0 left-0 right-0">
-        <Card className="p-4 flex flex-row items-center justify-between bg-[#12A19A1A] text-[#12A19A] text-lg font-medium rounded-none rounded-t-2xl">
+        <Card className="p-4 flex flex-row items-center justify-between bg-success/10 text-success text-lg font-medium rounded-none rounded-t-2xl">
           <CardTitle>Receba até</CardTitle>
           <CardTitle>
             R${" "}
@@ -573,6 +536,10 @@ function EstimatedValue({
   );
 }
 
+/**
+ * Mile card text content for desktop view
+ * Provides instructions for advanced passenger average options
+ */
 function MilhasCardText() {
   return (
     <div className="flex-col gap-2 hidden md:flex">
@@ -581,7 +548,7 @@ function MilhasCardText() {
           Média de milhas
         </h3>
       </div>
-      <p className="text-xs leading-relaxed text-[#475569]">
+      <p className="text-xs leading-relaxed text-secondary-foreground">
         Ao vender mais de 20.000 milhas, ative as Opções Avançadas para definir
         a média de milhas por emissão.
       </p>
@@ -589,18 +556,24 @@ function MilhasCardText() {
   );
 }
 
+/**
+ * Displays competitive ranking as horizontal badges (mobile view)
+ * Shows user's position relative to competitors with visual indicators
+ * @param rankingData - API data with competitor pricing
+ * @param isLoadingRanking - Loading state for ranking data
+ * @param error - Error state for ranking data fetch
+ */
 function RankingBadges({
-  form,
   rankingData,
   isLoadingRanking,
   error,
 }: {
-  form: ReturnType<typeof useForm<Step2FormValues>>;
   rankingData: RankingItem[];
   isLoadingRanking: boolean;
   error: Error | null;
 }) {
-  const currentValue = Number(form.watch("valuePerThousand")) || 0;
+  const { watch } = useFormContext<CombinedFormValues>();
+  const currentValue = Number(watch("valuePerThousand")) || 0;
   const formatValue = (val: number) =>
     val.toLocaleString("pt-BR", {
       minimumFractionDigits: 2,
@@ -620,12 +593,12 @@ function RankingBadges({
   if (isLoadingRanking) {
     return (
       <div className="flex flex-wrap gap-1 2xl:hidden">
-        {Array.from({ length: 5 }, (_, index) => (
-          <Skeleton
-            key={`badge-skeleton-${index}-${Math.random()}`}
-            className="h-8 w-20 rounded-full"
-          />
-        ))}
+        {Array.from({ length: 5 }, (_, index) => {
+          const skeletonId = `ranking-badge-skeleton-${index}`;
+          return (
+            <Skeleton key={skeletonId} className="h-8 w-20 rounded-full" />
+          );
+        })}
       </div>
     );
   }
@@ -633,7 +606,7 @@ function RankingBadges({
   if (error) {
     return (
       <div className="flex flex-wrap gap-1 2xl:hidden">
-        <div className="text-sm text-red-500">
+        <div className="text-sm text-destructive">
           Erro ao carregar ranking. Usando dados estáticos.
         </div>
       </div>
@@ -663,19 +636,25 @@ function RankingBadges({
   );
 }
 
+/**
+ * Displays competitive ranking as vertical list (desktop view)
+ * Shows detailed competitor information with user's position highlighted
+ * @param rankingData - API data with competitor pricing
+ * @param isLoadingRanking - Loading state for ranking data
+ * @param error - Error state for ranking data fetch
+ */
 function RankingCard({
-  form,
   rankingData,
   isLoadingRanking,
   error,
 }: {
-  form: ReturnType<typeof useForm<Step2FormValues>>;
   rankingData: RankingItem[];
   isLoadingRanking: boolean;
   error: Error | null;
 }) {
+  const { watch } = useFormContext<CombinedFormValues>();
   // Get current user value from form
-  const currentValue = Number(form.watch("valuePerThousand")) || 0;
+  const currentValue = Number(watch("valuePerThousand")) || 0;
 
   // Use API data if available, otherwise fallback to static data
   const allValues =
@@ -698,20 +677,25 @@ function RankingCard({
       <Card className="border-border rounded-lg py-0 hidden 2xl:block">
         <CardContent className="p-0">
           <div className="flex flex-col">
-            {Array.from({ length: 5 }, (_, index) => (
-              <div
-                key={`skeleton-${index}-${Math.random()}`}
-                className={`flex items-center justify-between pl-2 pr-4 py-3 ${
-                  index < 4 ? "border-b border-[#E2E2E2]" : ""
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Skeleton className="w-7 h-7 rounded-full" />
-                  <Skeleton className="h-4 w-20" />
+            {Array.from({ length: 5 }, (_, index) => {
+              const skeletonId = `ranking-card-skeleton-${index}`;
+              return (
+                <div
+                  key={skeletonId}
+                  className={`flex items-center justify-between pl-2 pr-4 py-3 ${
+                    index < 4 ? "border-b border-border" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <Skeleton className="w-7 h-7 rounded-full" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                  {index === 4 && (
+                    <Skeleton className="h-6 w-12 rounded-full" />
+                  )}
                 </div>
-                {index === 4 && <Skeleton className="h-6 w-12 rounded-full" />}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </CardContent>
       </Card>
@@ -722,7 +706,7 @@ function RankingCard({
     return (
       <Card className="border-border rounded-lg py-0 hidden 2xl:block">
         <CardContent className="p-4">
-          <div className="text-center text-red-500">
+          <div className="text-center text-destructive">
             Erro ao carregar ranking. Usando dados estáticos.
           </div>
         </CardContent>
@@ -743,28 +727,30 @@ function RankingCard({
               <div
                 key={`ranking-${position}-${value}-${isUser ? "user" : "competitor"}`}
                 className={`flex items-center justify-between pl-2 pr-4 py-3 ${
-                  !isLast ? "border-b border-[#E2E2E2]" : ""
+                  !isLast ? "border-b border-border" : ""
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <span
                     className={`w-7 h-7 flex items-center justify-center text-sm font-medium ${
-                      isUser ? "text-[#12A19A]" : "text-[#1E90FF]"
+                      isUser ? "text-success" : "text-primary"
                     }`}
                   >
                     {position}º
                   </span>
                   <span
                     className={`text-sm font-medium ${
-                      isUser ? "text-[#12A19A] font-bold" : "text-[#2E3D50]"
+                      isUser
+                        ? "text-success font-bold"
+                        : "text-sidebar-foreground"
                     }`}
                   >
                     R$ {formatValue(Number(value))}
                   </span>
                 </div>
                 {isUser && (
-                  <div className="bg-[#12A19A]/10 rounded-full px-2 py-1">
-                    <span className="text-[#12A19A] text-sm font-medium">
+                  <div className="text-success-foreground rounded-full px-2 py-1">
+                    <span className="text-success text-sm font-medium">
                       Você
                     </span>
                   </div>

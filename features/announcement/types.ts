@@ -1,5 +1,6 @@
 import type { z } from "zod";
 import type {
+  CombinedFormSchema,
   Step1Schema,
   Step2Schema,
   Step3Schema,
@@ -10,6 +11,8 @@ export type Step1Values = z.infer<typeof Step1Schema>;
 export type Step2Values = z.infer<typeof Step2Schema>;
 
 export type Step3Values = z.infer<typeof Step3Schema>;
+
+export type CombinedFormValues = z.infer<typeof CombinedFormSchema>;
 
 export type RankingItem = {
   mile_value: number;
@@ -27,4 +30,24 @@ export type StepProps = {
   isFirst?: boolean;
   currentStep: number;
   onClick?: () => void;
+  isClickable: boolean;
+};
+
+export type FormValues = Record<string, unknown>;
+
+export type MultiStepFormContextType = {
+  formValues: FormValues;
+  updateFormValues: (data: Partial<FormValues>) => void;
+  currentStep: number;
+  setCurrentStep: (step: number) => void;
+  totalSteps: number;
+  canGoBack: boolean;
+  canGoForward: boolean;
+  clearForm: () => void;
+  validateForm: () => { isValid: boolean; errors: Record<string, string> };
+  validateStep: (step: number) => boolean;
+  isStepValid: (step: number) => boolean;
+  nextStep: () => void;
+  previousStep: () => void;
+  goToStep: (step: number) => void;
 };
