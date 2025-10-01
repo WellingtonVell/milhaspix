@@ -4,6 +4,20 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* MilhasPix Design System Colors */
+  --color-primary-01: var(--primary-01);
+  --color-primary-02: var(--primary-02);
+  --color-pb-01: var(--pb-01);
+  --color-pb-02: var(--pb-02);
+  --color-pb-03: var(--pb-03);
+  --color-pb-04: var(--pb-04);
+  --color-pb-05: var(--pb-05);
+  --color-neutral-100: var(--neutral-100);
+  --color-neutral-200: var(--neutral-200);
+  --color-neutral-300: var(--neutral-300);
+  --color-neutral-400: var(--neutral-400);
+  
+  /* Shadcn UI Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
@@ -45,71 +59,108 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  
+  /* MilhasPix Design System Colors */
+  --primary-01: #1E90FF; /* Primary Blue */
+  --primary-02: #CAE6FB; /* Light Blue */
+  --pb-01: #FFFFFF; /* White */
+  --pb-02: #2E3D50; /* Dark Text */
+  --pb-03: #E2E2E2; /* Light Border */
+  --pb-04: #8F8F8F; /* Muted Text */
+  --pb-05: #475569; /* Secondary Text */
+  --neutral-100: #F9F9F9; /* Light Background */
+  --neutral-200: #F0F0F0; /* Light Gray */
+  --neutral-300: #CBD5E1; /* Inactive Text */
+  --neutral-400: #EAEAEA; /* Button Text */
+  
+  /* Semantic Colors */
+  --background: var(--pb-01);
+  --foreground: var(--pb-02);
+  --card: var(--pb-01);
+  --card-foreground: var(--pb-02);
+  --popover: var(--pb-01);
+  --popover-foreground: var(--pb-02);
+  --primary: var(--primary-01);
+  --primary-foreground: var(--pb-01);
+  --secondary: var(--neutral-100);
+  --secondary-foreground: var(--pb-02);
+  --muted: var(--neutral-100);
+  --muted-foreground: var(--pb-04);
+  --accent: var(--primary-02);
+  --accent-foreground: var(--pb-02);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --border: var(--pb-03);
+  --input: var(--pb-03);
+  --ring: var(--primary-01);
+  
+  /* Chart Colors */
+  --chart-1: var(--primary-01);
+  --chart-2: var(--pb-05);
+  --chart-3: var(--pb-04);
+  --chart-4: var(--neutral-300);
+  --chart-5: var(--neutral-200);
+  
+  /* Sidebar Colors */
+  --sidebar: var(--pb-01);
+  --sidebar-foreground: var(--pb-02);
+  --sidebar-primary: var(--primary-01);
+  --sidebar-primary-foreground: var(--pb-01);
+  --sidebar-accent: var(--neutral-100);
+  --sidebar-accent-foreground: var(--pb-02);
+  --sidebar-border: var(--pb-03);
+  --sidebar-ring: var(--primary-01);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  /* MilhasPix Dark Mode Colors */
+  --primary-01: #4A9EFF; /* Lighter Blue for dark mode */
+  --primary-02: #1E3A5F; /* Darker Blue for dark mode */
+  --pb-01: #1A1A1A; /* Dark Background */
+  --pb-02: #FFFFFF; /* Light Text */
+  --pb-03: #404040; /* Dark Border */
+  --pb-04: #A0A0A0; /* Light Muted Text */
+  --pb-05: #B0B0B0; /* Light Secondary Text */
+  --neutral-100: #2A2A2A; /* Dark Card Background */
+  --neutral-200: #404040; /* Dark Gray */
+  --neutral-300: #606060; /* Medium Gray */
+  --neutral-400: #808080; /* Light Gray */
+  
+  /* Semantic Colors for Dark Mode */
+  --background: var(--pb-01);
+  --foreground: var(--pb-02);
+  --card: var(--neutral-100);
+  --card-foreground: var(--pb-02);
+  --popover: var(--neutral-100);
+  --popover-foreground: var(--pb-02);
+  --primary: var(--primary-01);
+  --primary-foreground: var(--pb-01);
+  --secondary: var(--neutral-100);
+  --secondary-foreground: var(--pb-02);
+  --muted: var(--neutral-100);
+  --muted-foreground: var(--pb-04);
+  --accent: var(--primary-02);
+  --accent-foreground: var(--pb-02);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: var(--pb-03);
+  --input: var(--pb-03);
+  --ring: var(--primary-01);
+  
+  /* Chart Colors for Dark Mode */
+  --chart-1: var(--primary-01);
+  --chart-2: var(--pb-05);
+  --chart-3: var(--pb-04);
+  --chart-4: var(--neutral-300);
+  --chart-5: var(--neutral-200);
+  
+  /* Sidebar Colors for Dark Mode */
+  --sidebar: var(--neutral-100);
+  --sidebar-foreground: var(--pb-02);
+  --sidebar-primary: var(--primary-01);
+  --sidebar-primary-foreground: var(--pb-01);
+  --sidebar-accent: var(--neutral-100);
+  --sidebar-accent-foreground: var(--pb-02);
+  --sidebar-border: var(--pb-03);
+  --sidebar-ring: var(--primary-01);
 }
 
 @layer base {
@@ -120,3 +171,4 @@
     @apply bg-background text-foreground;
   }
 }
+

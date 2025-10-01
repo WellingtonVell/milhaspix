@@ -1,3 +1,9 @@
-export default function Home() {
-  return <div>Hello World!</div>;
+import Link from "next/link";
+
+export default function Inicio() {
+  return (
+    <div>
+      <Link href="/ad">AD</Link>
+    </div>
+  );
 }
