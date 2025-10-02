@@ -1,9 +1,11 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { ChevronDown, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Select, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -13,7 +15,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  LoyaltyProgramIcon,
+  StatusBadge,
+} from "@/features/offers/components/list";
 import { headers } from "@/features/offers/constants";
+import type { Offer } from "@/features/offers/types";
 import { cn } from "@/lib/utils";
 
 export function ListSkeleton() {
@@ -22,21 +29,34 @@ export function ListSkeleton() {
       <div className="lg:max-w-[1216px] mx-auto">
         <Header />
 
-        {/* Mobile search and filter controls skeleton */}
-        <div className="grid grid-cols-[1fr_auto] gap-4 items-start sm:items-center px-4 pb-4 mt-5 sm:mt-0 lg:hidden">
+        <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center lg:border rounded-t-2xl p-2 lg:min-h-20">
+          <p className="text-lg text-gray-600 hidden lg:block pl-4">
+            Todas ofertas
+          </p>
+
           <div className="relative">
-            <Skeleton className="w-full h-8 rounded-full" />
+            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary size-5" />
+            <Input
+              type="text"
+              placeholder="Login de acesso, ID da oferta..."
+              className="w-full pr-4 py-2 border h-8 lg:h-10 rounded-full lg:min-w-[352px]"
+              disabled
+            />
           </div>
-          <Skeleton className="w-full max-w-[96px] h-8 rounded-full" />
+
+          <Select>
+            <SelectTrigger
+              className="w-full !h-8 lg:!h-10 rounded-full max-w-[96px] lg:max-w-[120px] lg:min-w-[201px]"
+              icon={<ChevronDown className="size-5 text-primary" />}
+              disabled
+            >
+              <SelectValue placeholder="Filtros" />
+            </SelectTrigger>
+          </Select>
         </div>
 
         <div className="space-y-4 px-4 lg:hidden">
-          {Array.from(
-            { length: 3 },
-            (_, index) => `skeleton-card-${index}`,
-          ).map((key) => (
-            <OfferCardSkeleton key={key} />
-          ))}
+          <OfferCardSkeleton />
         </div>
 
         <DesktopTableSkeleton />
@@ -60,48 +80,46 @@ export function Header() {
 }
 
 function OfferCardSkeleton() {
+  // Sample data for skeleton - matches desktop pattern
+  const sampleData = Array.from({ length: 3 }, (_, index) => ({
+    key: `skeleton-card-${index}`,
+    program: ["Smiles", "TudoAzul", "Latam"][index % 3],
+    status: ["Ativa", "Em Utilizacao", "Inativo"][
+      index
+    ] as Offer["offerStatus"],
+  }));
+
   return (
-    <Card className="w-full rounded-4xl">
-      <CardHeader className="!pb-2 border-b">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 translate-x-4">
-            {/* LoyaltyProgramIcon skeleton - 40x40px image */}
-            <Skeleton className="w-10 h-10 rounded-full" />
-            <div className="flex flex-col">
-              {/* Program name - text-sm font-bold */}
-              <Skeleton className="w-16 h-[14px] mb-0" />
-              {/* "Comum" text - text-xs */}
-              <Skeleton className="w-12 h-3 mt-0" />
+    <>
+      {sampleData.map(({ key, program, status }) => (
+        <Card key={key} className="w-full rounded-4xl">
+          <CardHeader className="!pb-2 border-b">
+            <div className="flex items-center justify-between">
+              <LoyaltyProgramIcon program={program} />
+              <div className="flex items-end flex-col gap-2">
+                <StatusBadge status={status} />
+                {/* Date text - text-xs */}
+                <Skeleton className="w-16 h-3" />
+              </div>
             </div>
-          </div>
-          <div className="flex items-end flex-col gap-2">
-            {/* StatusBadge skeleton - rounded-full with dot */}
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full">
-              <Skeleton className="w-2 h-2 rounded-full" />
-              <Skeleton className="w-16 h-4" />
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <Skeleton className="w-20 h-3" />
+              <Skeleton className="w-24 h-3" />
             </div>
-            {/* Date text - text-xs */}
-            <Skeleton className="w-16 h-3" />
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex justify-between items-center">
-          <Skeleton className="w-20 h-3" />
-          <Skeleton className="w-24 h-3" />
-        </div>
-        <div className="flex justify-between items-center">
-          {/* "Login" label - text-xs font-bold */}
-          <Skeleton className="w-8 h-3" />
-          {/* Account login value - text-xs with max-w-[200px] truncate */}
-          <Skeleton className="w-32 h-3 max-w-[200px]" />
-        </div>
-        <div className="flex justify-between items-center">
-          <Skeleton className="w-24 h-3" />
-          <Skeleton className="w-20 h-3" />
-        </div>
-      </CardContent>
-    </Card>
+            <div className="flex justify-between items-center">
+              <Skeleton className="w-8 h-3" />
+              <Skeleton className="w-32 h-3 max-w-[200px]" />
+            </div>
+            <div className="flex justify-between items-center">
+              <Skeleton className="w-24 h-3" />
+              <Skeleton className="w-20 h-3" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </>
   );
 }
 
@@ -110,16 +128,29 @@ function DesktopTableSkeleton() {
     <div className="hidden lg:block w-full">
       {/* SubHeader skeleton - search and filter controls */}
       <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center lg:border rounded-t-2xl p-2 lg:min-h-20">
-        {/* "Todas ofertas" text */}
-        <Skeleton className="w-32 h-5 ml-4" />
+        <p className="text-lg text-gray-600 hidden lg:block pl-4">
+          Todas ofertas
+        </p>
 
-        {/* Search input skeleton */}
         <div className="relative">
-          <Skeleton className="w-[352px] h-10 rounded-full" />
+          <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary size-5" />
+          <Input
+            type="text"
+            placeholder="Login de acesso, ID da oferta..."
+            className="w-full pr-4 py-2 border h-8 lg:h-10 rounded-full lg:min-w-[352px]"
+            disabled
+          />
         </div>
 
-        {/* Filter select skeleton */}
-        <Skeleton className="w-[201px] h-10 rounded-full" />
+        <Select>
+          <SelectTrigger
+            className="w-full !h-8 lg:!h-10 rounded-full max-w-[96px] lg:max-w-[120px] lg:min-w-[201px]"
+            icon={<ChevronDown className="size-5 text-primary" />}
+            disabled
+          >
+            <SelectValue placeholder="Filtros" />
+          </SelectTrigger>
+        </Select>
       </div>
 
       {/* Table skeleton */}
@@ -140,29 +171,21 @@ function DesktopTableSkeleton() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Array.from(
-              { length: 5 },
-              (_, index) => `skeleton-row-${index}`,
-            ).map((key) => (
+            {Array.from({ length: 5 }, (_, index) => ({
+              key: `skeleton-row-${index}`,
+              program: ["Smiles", "TudoAzul", "Latam", "AirPortugal", "Smiles"][
+                index % 5
+              ],
+              status: ["Ativa", "Em Utilizacao", "Inativo", "Ativa", "Inativo"][
+                index
+              ] as Offer["offerStatus"],
+            })).map(({ key, program, status }) => (
               <TableRow key={key} className="border-none">
                 <TableCell className="flex justify-start py-4">
-                  <div className="flex items-center gap-2 translate-x-4">
-                    {/* LoyaltyProgramIcon skeleton - 40x40px image */}
-                    <Skeleton className="w-10 h-10 rounded-full" />
-                    <div className="flex flex-col">
-                      {/* Program name - text-sm font-bold */}
-                      <Skeleton className="w-16 h-[14px] mb-0" />
-                      {/* "Comum" text - text-xs */}
-                      <Skeleton className="w-12 h-3 mt-0" />
-                    </div>
-                  </div>
+                  <LoyaltyProgramIcon program={program} />
                 </TableCell>
                 <TableCell className="text-center py-4">
-                  {/* StatusBadge skeleton - rounded-full with dot */}
-                  <div className="flex items-center justify-center gap-1 px-2 py-1 rounded-full mx-auto w-fit">
-                    <Skeleton className="w-2 h-2 rounded-full" />
-                    <Skeleton className="w-16 h-4" />
-                  </div>
+                  <StatusBadge status={status} />
                 </TableCell>
                 <TableCell className="text-center text-sm text-gray-600 py-4">
                   {/* Offer ID - text-sm */}

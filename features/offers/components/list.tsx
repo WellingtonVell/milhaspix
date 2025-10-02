@@ -98,7 +98,7 @@ export function OffersList() {
  * Status badge component with proper styling based on offer status
  * @param status - The offer status to display
  */
-function StatusBadge({ status }: { status: Offer["offerStatus"] }) {
+export function StatusBadge({ status }: { status: Offer["offerStatus"] }) {
   const statusConfig = {
     Ativa: {
       variant: "default" as const,
@@ -130,7 +130,7 @@ function StatusBadge({ status }: { status: Offer["offerStatus"] }) {
   );
 }
 
-function LoyaltyProgramIcon({ program }: { program: string }) {
+export function LoyaltyProgramIcon({ program }: { program: string }) {
   const programImages: Record<string, string> = {
     Smiles: "/images/smiles-icon.png",
     TudoAzul: "/images/tudoazul-icon.png",
