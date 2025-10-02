@@ -17,10 +17,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-border": "var(--border)",
           "--success-bg": "var(--success)",
           "--success-text": "var(--success-foreground)",
-          "--success-border": "var(--border)",
+          "--success-border": "var(--success)",
           "--error-bg": "var(--destructive)",
           "--error-text": "var(--destructive-foreground)",
-          "--error-border": "var(--border)",
+          "--error-border": "var(--destructive)",
         } as React.CSSProperties
       }
       {...props}
