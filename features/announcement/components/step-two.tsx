@@ -28,14 +28,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { useRankingData } from "@/features/announcement/api/queries";
 import {
   VALUE_PER_THOUSAND_MAX,
   VALUE_PER_THOUSAND_MIN,
 } from "@/features/announcement/constants";
 import { useMultiStepForm } from "@/features/announcement/ctx";
-import { useRankingData } from "@/features/announcement/queries";
 import { Step2Schema } from "@/features/announcement/schemas";
 import type {
   CombinedFormValues,
@@ -71,11 +70,9 @@ export function StepTwo() {
 
   const valuePerThousand = watch("valuePerThousand");
   const milesOffered = watch("milesOffered");
-  const {
-    data: rankingData = [],
-    isLoading: isLoadingRanking,
-    error: rankingError,
-  } = useRankingData(Number(valuePerThousand) || undefined);
+  const { data: rankingData = [], error: rankingError } = useRankingData(
+    Number(valuePerThousand) || undefined,
+  );
 
   /**
    * Calculates recommended average miles per passenger based on offering
@@ -176,6 +173,7 @@ export function StepTwo() {
                           key={opt.value}
                           type="button"
                           onClick={() => field.onChange(opt.value)}
+                          data-testid={`payout-${opt.value}`}
                           className={cn(
                             `rounded-full border px-4 py-2 text-sm min-h-[44px] ${
                               field.value === opt.value
@@ -232,6 +230,7 @@ export function StepTwo() {
                             ref={field.ref}
                             className="rounded-full w-full !h-[44px] pr-12 text-start font-mono"
                             placeholder="10.000"
+                            data-testid="miles-offered"
                           />
                           <div className="absolute right-4 top-1/2 -translate-y-1/2">
                             <Plane className="w-5 h-5 text-primary" />
@@ -282,6 +281,7 @@ export function StepTwo() {
                             ref={field.ref}
                             className="rounded-full w-full !h-[44px] pr-12 text-start font-mono"
                             placeholder="R$ 25,00"
+                            data-testid="value-per-thousand"
                           />
                           <div className="absolute right-4 top-1/2 -translate-y-1/2">
                             {hasValue ? (
@@ -341,21 +341,31 @@ export function StepTwo() {
                   <FormItem>
                     <FormLabel>Média de milhas por passageiro</FormLabel>
                     <FormControl>
-                      <Input
-                        type="tel"
-                        {...field}
-                        value={field.value?.toString() || ""}
-                        onChange={(e) =>
-                          field.onChange(Number(e.target.value) || undefined)
-                        }
-                        className="rounded-full w-full !h-12"
-                        placeholder="Ex: 5000"
-                        maxLength={10}
-                      />
+                      <div className="grid sm:grid-cols-2 gap-2">
+                        <Input
+                          type="tel"
+                          {...field}
+                          value={field.value?.toString() || ""}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value) || undefined)
+                          }
+                          className="rounded-full w-full !h-12"
+                          placeholder="Ex: 5000"
+                          maxLength={10}
+                        />
+                        <div className="hidden sm:flex flex-row gap-2 items-center justify-center bg-success/10 rounded-full">
+                          <p className="text-center text-success">
+                            Melhor média para a sua oferta:{" "}
+                            <span className="font-semibold">
+                              {bestAverage.toLocaleString("pt-BR")}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
                     </FormControl>
 
                     {!errors.averageMilesPerPassenger && (
-                      <FormDescription className="text-success">
+                      <FormDescription className="sm:hidden text-success">
                         Melhor média para a sua oferta:{" "}
                         <span className="font-semibold">
                           {bestAverage.toLocaleString("pt-BR")}
@@ -377,11 +387,7 @@ export function StepTwo() {
                 </p>
               )}
 
-              <RankingBadges
-                rankingData={rankingData}
-                isLoadingRanking={isLoadingRanking}
-                error={rankingError}
-              />
+              <RankingBadges rankingData={rankingData} error={rankingError} />
             </div>
           </CardContent>
         </Card>
@@ -390,7 +396,6 @@ export function StepTwo() {
           accordion={false}
           className="hidden md:flex 2xl:hidden"
           rankingData={rankingData}
-          isLoadingRanking={isLoadingRanking}
           error={rankingError}
         />
 
@@ -411,6 +416,8 @@ export function StepTwo() {
           <Button
             onClick={handleStepSubmit}
             className="rounded-full has-[>svg]:px-[27px] h-10 min-w-[142px]"
+            data-step2-submit
+            data-testid="step2-next"
           >
             Prosseguir
             <ArrowRight className="w-4 h-4" />
@@ -422,7 +429,6 @@ export function StepTwo() {
         accordion={true}
         className="md:hidden 2xl:flex"
         rankingData={rankingData}
-        isLoadingRanking={isLoadingRanking}
         error={rankingError}
       />
     </div>
@@ -433,20 +439,17 @@ export function StepTwo() {
  * Mile information card with ranking data and estimated value
  * @param accordion - Whether to show accordion interface (mobile only)
  * @param rankingData - Competitive ranking data from API
- * @param isLoadingRanking - Loading state for ranking data
  * @param error - Error state for ranking data fetch
  */
 function MilhasCard({
   accordion,
   className,
   rankingData,
-  isLoadingRanking,
   error,
 }: {
   accordion: boolean;
   className?: string;
   rankingData: RankingItem[];
-  isLoadingRanking: boolean;
   error: Error | null;
 }) {
   return (
@@ -482,11 +485,7 @@ function MilhasCard({
 
       <div className="hidden 2xl:flex flex-col gap-2">
         <Label>Ranking das ofertas</Label>
-        <RankingCard
-          rankingData={rankingData}
-          isLoadingRanking={isLoadingRanking}
-          error={error}
-        />
+        <RankingCard rankingData={rankingData} error={error} />
       </div>
 
       <Separator className="w-full hidden 2xl:block" />
@@ -560,16 +559,13 @@ function MilhasCardText() {
  * Displays competitive ranking as horizontal badges (mobile view)
  * Shows user's position relative to competitors with visual indicators
  * @param rankingData - API data with competitor pricing
- * @param isLoadingRanking - Loading state for ranking data
  * @param error - Error state for ranking data fetch
  */
 function RankingBadges({
   rankingData,
-  isLoadingRanking,
   error,
 }: {
   rankingData: RankingItem[];
-  isLoadingRanking: boolean;
   error: Error | null;
 }) {
   const { watch } = useFormContext<CombinedFormValues>();
@@ -589,19 +585,6 @@ function RankingBadges({
       : [15.23, 16.32, 16.44, 16.45, currentValue].sort(
           (a, b) => Number(a) - Number(b),
         );
-
-  if (isLoadingRanking) {
-    return (
-      <div className="flex flex-wrap gap-1 2xl:hidden">
-        {Array.from({ length: 5 }, (_, index) => {
-          const skeletonId = `ranking-badge-skeleton-${index}`;
-          return (
-            <Skeleton key={skeletonId} className="h-8 w-20 rounded-full" />
-          );
-        })}
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -640,16 +623,13 @@ function RankingBadges({
  * Displays competitive ranking as vertical list (desktop view)
  * Shows detailed competitor information with user's position highlighted
  * @param rankingData - API data with competitor pricing
- * @param isLoadingRanking - Loading state for ranking data
  * @param error - Error state for ranking data fetch
  */
 function RankingCard({
   rankingData,
-  isLoadingRanking,
   error,
 }: {
   rankingData: RankingItem[];
-  isLoadingRanking: boolean;
   error: Error | null;
 }) {
   const { watch } = useFormContext<CombinedFormValues>();
@@ -671,36 +651,6 @@ function RankingCard({
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
-
-  if (isLoadingRanking) {
-    return (
-      <Card className="border-border rounded-lg py-0 hidden 2xl:block">
-        <CardContent className="p-0">
-          <div className="flex flex-col">
-            {Array.from({ length: 5 }, (_, index) => {
-              const skeletonId = `ranking-card-skeleton-${index}`;
-              return (
-                <div
-                  key={skeletonId}
-                  className={`flex items-center justify-between pl-2 pr-4 py-3 ${
-                    index < 4 ? "border-b border-border" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="w-7 h-7 rounded-full" />
-                    <Skeleton className="h-4 w-20" />
-                  </div>
-                  {index === 4 && (
-                    <Skeleton className="h-6 w-12 rounded-full" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   if (error) {
     return (

@@ -117,6 +117,7 @@ export function StepThree() {
                             field.onChange(formattedValue);
                           }}
                           maxLength={14}
+                          data-testid="cpf-input"
                         />
                         <UserCircle className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary" />
                       </div>
@@ -137,6 +138,7 @@ export function StepThree() {
                       <Input
                         placeholder="1283124124"
                         className="rounded-[44px] w-full h-12 px-4 border-border focus:border-primary focus:ring-1 focus:ring-primary"
+                        data-testid="login-input"
                         {...field}
                       />
                     </FormControl>
@@ -158,6 +160,7 @@ export function StepThree() {
                           type="password"
                           placeholder="1877"
                           className="rounded-[44px] w-full h-12 pl-4 pr-12 border-border focus:border-primary focus:ring-1 focus:ring-primary"
+                          data-testid="password-input"
                           {...field}
                         />
                         <Lock className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary" />
@@ -183,6 +186,7 @@ export function StepThree() {
                           defaultCountry="BR"
                           placeholder="(19) 98277-3123"
                           className="flex items-center rounded-[44px] border border-border focus-within:border-primary focus-within:ring-1 focus-within:ring-primary h-12 overflow-hidden"
+                          data-testid="phone-input"
                         />
                         <Zap className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 pointer-events-none" />
                       </div>
@@ -228,6 +232,7 @@ export function StepThree() {
             onClick={handleStepSubmit}
             className="rounded-full has-[>svg]:px-[27px] h-10 min-w-[142px]"
             data-step3-submit
+            data-testid="step3-submit"
           >
             Concluir
             <ArrowRight className="w-4 h-4" />

@@ -179,6 +179,7 @@ export function StepOne() {
                               type="button"
                               aria-pressed={isSelected}
                               onClick={() => field.onChange(key)}
+                              data-testid={`program-${key}`}
                               className={cn(
                                 `rounded-full border border-border px-4 py-2.5 flex items-center justify-center transition-colors`,
                                 isSelected
@@ -227,7 +228,10 @@ export function StepOne() {
                         value={field.value}
                         onValueChange={field.onChange}
                       >
-                        <SelectTrigger className="rounded-full w-full !h-12">
+                        <SelectTrigger
+                          className="rounded-full w-full !h-12"
+                          data-testid="product-select"
+                        >
                           <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                         <SelectContent>
@@ -274,6 +278,8 @@ export function StepOne() {
           <Button
             onClick={handleStepSubmit}
             className="rounded-full has-[>svg]:px-[27px] h-10 min-w-[142px]"
+            data-step1-submit
+            data-testid="step1-next"
           >
             Prosseguir
             <ArrowRight className="w-4 h-4" />

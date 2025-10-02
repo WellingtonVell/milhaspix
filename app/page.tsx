@@ -8,7 +8,7 @@ import { OFFERS_KEYS } from "@/features/offers/api/keys";
 import { fetchOffersData } from "@/features/offers/api/queries";
 import { OffersList } from "@/features/offers/components/list";
 
-export default async function Inicio() {
+export default function Page() {
   const queryClient = new QueryClient();
 
   queryClient.prefetchQuery({
