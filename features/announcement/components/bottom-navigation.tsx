@@ -19,6 +19,7 @@ export function BottomNavigation() {
     canGoBack,
     canGoForward,
     clearForm,
+    isStepValid,
   } = useMultiStepForm();
 
   /**
@@ -26,15 +27,18 @@ export function BottomNavigation() {
    * Step 3 requires triggering the form submission button instead of direct navigation
    */
   const handleNext = () => {
-    if (currentStep === 3) {
-      // Trigger step 3 form submission button programmatically
-      const step3Button = document.querySelector(
-        "[data-step3-submit]",
+    if (!isStepValid(currentStep)) {
+      // Trigger step form submission button programmatically
+      const stepButton = document.querySelector(
+        `[data-testid="step${currentStep}-next"], [data-step${currentStep}-submit]`,
       ) as HTMLButtonElement;
-      if (step3Button) {
-        step3Button.click();
+      if (stepButton) {
+        stepButton.click();
       }
-    } else {
+      return;
+    }
+
+    if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
     }
   };

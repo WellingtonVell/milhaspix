@@ -10,7 +10,7 @@ import { StepThree } from "@/features/announcement/components/step-three";
 import { StepTwo } from "@/features/announcement/components/step-two";
 import { useMultiStepForm } from "@/features/announcement/ctx";
 
-export default function Home() {
+export function Form() {
   const { currentStep, totalSteps } = useMultiStepForm();
 
   const progress = (currentStep / totalSteps) * 100;

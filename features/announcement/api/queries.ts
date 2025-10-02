@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { ANNOUNCEMENT_KEYS } from "@/features/announcement/api/keys";
 import type { RankingItem } from "@/features/announcement/types";
 
 /**
@@ -25,7 +26,7 @@ const fetchRankingData = async (mileValue: number): Promise<RankingItem[]> => {
  */
 export function useRankingData(mileValue: number | undefined) {
   return useQuery({
-    queryKey: ["ranking", mileValue],
+    queryKey: ANNOUNCEMENT_KEYS.list({ mileValue: mileValue as number }),
     queryFn: () => fetchRankingData(mileValue as number),
     enabled: !!mileValue && mileValue > 0,
     staleTime: 5 * 60 * 1000, // 5 minutes

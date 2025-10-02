@@ -34,5 +34,9 @@
     "source.removeUnusedImports": "always",
     "source.sortImports.biome": "always",
     "source.sortImports": "never"
+  },
+  "explorer.fileNesting.patterns": {
+    "*.tsx": "$(capture).tsx, $(capture).test.tsx, $(capture).ts, $(capture).test.ts",
+    "*.ts": "$(capture).ts, $(capture).test.ts, $(capture).tsx, $(capture).test.tsx"
   }
 }

@@ -35,8 +35,6 @@ export async function GET(request: NextRequest) {
         headers: {
           "Content-Type": "application/json",
         },
-        // Add cache control for better performance
-        next: { revalidate: 300 }, // Cache for 5 minutes
       },
     );
 
