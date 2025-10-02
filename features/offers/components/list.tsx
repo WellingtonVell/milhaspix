@@ -72,7 +72,7 @@ export function OffersList() {
 
   return (
     <main className="container sm:mx-auto">
-      <div className="lg:max-w-[1216px] mx-auto">
+      <div className="lg:max-w-[1216px] mx-auto lg:px-4">
         <Header />
 
         <SubHeader
@@ -141,7 +141,7 @@ export function LoyaltyProgramIcon({ program }: { program: string }) {
   const imageSrc = programImages[program] || "/images/smiles.png";
 
   return (
-    <div className="flex items-center gap-2 translate-x-4">
+    <div className="flex items-center gap-2 lg:translate-x-4">
       <Image
         src={imageSrc}
         alt={program}

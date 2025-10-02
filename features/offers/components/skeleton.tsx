@@ -26,10 +26,10 @@ import { cn } from "@/lib/utils";
 export function ListSkeleton() {
   return (
     <main className="container sm:mx-auto">
-      <div className="lg:max-w-[1216px] mx-auto">
+      <div className="lg:max-w-[1216px] mx-auto lg:px-4">
         <Header />
 
-        <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center lg:border rounded-t-2xl p-2 lg:min-h-20">
+        <div className="grid grid-cols-[1fr_auto_auto] gap-4 items-center lg:border rounded-t-2xl p-2 lg:min-h-20 lg:hidden">
           <p className="text-lg text-gray-600 hidden lg:block pl-4">
             Todas ofertas
           </p>
@@ -171,10 +171,10 @@ function DesktopTableSkeleton() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {Array.from({ length: 5 }, (_, index) => ({
+            {Array.from({ length: 3 }, (_, index) => ({
               key: `skeleton-row-${index}`,
               program: ["Smiles", "TudoAzul", "Latam", "AirPortugal", "Smiles"][
-                index % 5
+                index % 3
               ],
               status: ["Ativa", "Em Utilizacao", "Inativo", "Ativa", "Inativo"][
                 index
