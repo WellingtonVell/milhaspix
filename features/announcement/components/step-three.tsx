@@ -176,6 +176,7 @@ export function StepThree() {
                           placeholder="(19) 98277-3123"
                           className="flex items-center rounded-[44px] border border-border focus-within:border-primary focus-within:ring-1 focus-within:ring-primary h-12 overflow-hidden"
                           data-testid="phone-input"
+                          limitMaxLength
                         />
                         <Zap className="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 pointer-events-none" />
                       </div>

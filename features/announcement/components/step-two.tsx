@@ -40,6 +40,7 @@ import type {
   CombinedFormValues,
   RankingItem,
 } from "@/features/announcement/types";
+import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
 
 // Brazilian currency formatter for price display
@@ -70,8 +71,11 @@ export function StepTwo() {
 
   const valuePerThousand = watch("valuePerThousand");
   const milesOffered = watch("milesOffered");
+
+  // Debounce the valuePerThousand to prevent excessive API calls
+  const debounced = useDebounce(valuePerThousand);
   const { data: rankingData = [], error: rankingError } = useRankingData(
-    Number(valuePerThousand) || undefined,
+    Number(debounced) || undefined,
   );
 
   /**
