@@ -7,6 +7,8 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
+  useRef,
   useState,
 } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -18,7 +20,6 @@ import {
 } from "@/features/announcement/schemas";
 import type {
   CombinedFormValues,
-  FormValues,
   MultiStepFormContextType,
 } from "@/features/announcement/types";
 
@@ -31,7 +32,7 @@ const MultiStepFormContext = createContext<MultiStepFormContextType | null>(
 );
 
 // localStorage key for persisting form data across browser sessions
-const STORAGE_KEY = "milhaspix-form-data";
+export const STORAGE_KEY = "milhaspix-form-data";
 
 /**
  * Provider component that manages multi-step form state and validation
@@ -39,12 +40,9 @@ const STORAGE_KEY = "milhaspix-form-data";
  * @param children - React components that need access to form context
  */
 export function MultiStepFormProvider({ children }: { children: ReactNode }) {
-  const [formValues, setFormValues] = useState<FormValues>({});
   const [currentStep, setCurrentStep] = useState<number>(1);
-
-  const totalSteps = 4;
-  const canGoBack = currentStep > 1;
-  const canGoForward = currentStep < totalSteps;
+  const [isClearing, setIsClearing] = useState<boolean>(false);
+  const isClearingRef = useRef<boolean>(false);
 
   // React Hook Form configuration with Zod validation
   const methods = useForm<CombinedFormValues>({
@@ -65,6 +63,20 @@ export function MultiStepFormProvider({ children }: { children: ReactNode }) {
     mode: "onChange",
   });
 
+  // Calculate derived values during rendering instead of using Effects
+  const totalSteps = 4;
+  const isSubmitted = methods.formState.isSubmitSuccessful;
+  const formValues = methods.getValues();
+
+  // Memoize navigation state to prevent unnecessary recalculations
+  const navigationState = useMemo(
+    () => ({
+      canGoBack: currentStep > 1 && currentStep < 4 && !isSubmitted,
+      canGoForward: currentStep < totalSteps,
+    }),
+    [currentStep, isSubmitted],
+  );
+
   // Load persisted form data from localStorage on mount
   useEffect(() => {
     try {
@@ -72,7 +84,6 @@ export function MultiStepFormProvider({ children }: { children: ReactNode }) {
       if (storedData) {
         const parsedData = JSON.parse(storedData);
         if (parsedData.formValues) {
-          setFormValues(parsedData.formValues);
           methods.reset(parsedData.formValues as CombinedFormValues);
         }
         if (parsedData.currentStep) {
@@ -84,8 +95,13 @@ export function MultiStepFormProvider({ children }: { children: ReactNode }) {
     }
   }, [methods]);
 
-  // Persist form data to localStorage whenever step or form values change
+  // Persist form data to localStorage when step or form values change
+  // Skip persistence when clearing form to prevent race conditions
   useEffect(() => {
+    if (isClearingRef.current) {
+      return;
+    }
+
     try {
       const currentFormValues = methods.getValues();
       const dataToStore = {
@@ -99,37 +115,41 @@ export function MultiStepFormProvider({ children }: { children: ReactNode }) {
     }
   }, [currentStep, methods]);
 
-  /**
-   * Updates form values state with partial data
-   * @param data - Partial form values to merge with existing state
-   */
-  const updateFormValues = useCallback((data: Partial<FormValues>) => {
-    setFormValues((prev) => {
-      const newValues = { ...prev, ...data };
-      return newValues;
-    });
-  }, []);
+  // Sync ref with state for immediate access
+  useEffect(() => {
+    isClearingRef.current = isClearing;
+  }, [isClearing]);
 
   /**
    * Clears all form data and resets to initial state
    * Removes persisted data from localStorage and resets form to defaults
+   * Uses ref to prevent race conditions with persistence effect
    */
   const clearForm = useCallback(() => {
-    setFormValues({});
-    setCurrentStep(1);
+    isClearingRef.current = true;
+    setIsClearing(true);
+    setCurrentStep(4);
     methods.reset();
+
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
       console.error("Error clearing form data from localStorage:", error);
     }
+
+    // Reset clearing flag after a short delay to allow persistence effect to complete
+    setTimeout(() => {
+      isClearingRef.current = false;
+      setIsClearing(false);
+    }, 100);
   }, [methods]);
 
   /**
    * Validates entire form using combined schema
+   * Memoized to prevent unnecessary recalculations
    * @returns Object with validation result and error messages
    */
-  const validateForm = useCallback(() => {
+  const validateForm = useMemo(() => {
     try {
       CombinedFormSchema.parse(formValues);
       return { isValid: true, errors: {} };
@@ -203,22 +223,27 @@ export function MultiStepFormProvider({ children }: { children: ReactNode }) {
 
   /**
    * Goes back to previous step
-   * Always allows going back to completed steps
+   * Prevents going back after successful form submission or when on final step
    */
   const previousStep = useCallback(() => {
-    if (currentStep > 1) {
+    if (currentStep > 1 && currentStep < 4 && !isSubmitted) {
       setCurrentStep(currentStep - 1);
     }
-  }, [currentStep]);
+  }, [currentStep, isSubmitted]);
 
   /**
    * Navigates to specific step with validation checks
-   * Allows going back to any previous step or forward only if current step is valid
+   * Prevents going back after successful form submission or when on final step
    * @param step - Target step number (1-4)
    */
   const goToStep = useCallback(
     (step: number) => {
       if (step >= 1 && step <= totalSteps) {
+        // Prevent going back after successful submission or when on final step
+        if (step < currentStep && (isSubmitted || currentStep === 4)) {
+          return;
+        }
+
         if (step <= currentStep) {
           setCurrentStep(step);
           return;
@@ -229,7 +254,7 @@ export function MultiStepFormProvider({ children }: { children: ReactNode }) {
         }
       }
     },
-    [currentStep, validateStep],
+    [currentStep, validateStep, isSubmitted],
   );
 
   return (
@@ -237,12 +262,11 @@ export function MultiStepFormProvider({ children }: { children: ReactNode }) {
       <MultiStepFormContext.Provider
         value={{
           formValues,
-          updateFormValues,
           currentStep,
           setCurrentStep,
           totalSteps,
-          canGoBack,
-          canGoForward,
+          canGoBack: navigationState.canGoBack,
+          canGoForward: navigationState.canGoForward,
           clearForm,
           validateForm,
           validateStep,

@@ -126,14 +126,20 @@ function StepItem({
  * Only allows forward navigation when current step is valid
  */
 export function StepIndicator() {
-  const { currentStep, setCurrentStep, isStepValid } = useMultiStepForm();
+  const { currentStep, setCurrentStep, isStepValid, canGoBack } =
+    useMultiStepForm();
 
   /**
    * Handles step click navigation with validation checks
-   * Allows going back to any previous step or forward only if current step is valid
+   * Prevents going back after successful form submission
    * @param stepNumber - Target step number to navigate to
    */
   const handleStepClick = (stepNumber: number) => {
+    // Prevent going back after successful submission
+    if (stepNumber < currentStep && !canGoBack) {
+      return;
+    }
+
     if (stepNumber < currentStep) {
       setCurrentStep(stepNumber);
       return;
@@ -153,7 +159,7 @@ export function StepIndicator() {
     <div className="w-full max-w-xs">
       {steps.map((step) => {
         const isClickable =
-          step.stepNumber < currentStep ||
+          (step.stepNumber < currentStep && canGoBack) ||
           (step.stepNumber === currentStep + 1 && isStepValid(currentStep)) ||
           step.stepNumber === currentStep;
 

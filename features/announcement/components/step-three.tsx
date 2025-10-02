@@ -1,10 +1,15 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Lock, UserCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Loader2Icon,
+  Lock,
+  UserCircle,
+} from "lucide-react";
 import Image from "next/image";
 import { useCallback } from "react";
 import { useFormContext } from "react-hook-form";
-import { toast } from "sonner";
 import {
   Accordion,
   AccordionContent,
@@ -22,10 +27,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { useSubmitAnnouncement } from "@/features/announcement/api/mutations";
 import { Companies } from "@/features/announcement/constants";
 import { useMultiStepForm } from "@/features/announcement/ctx";
 import { formatCPF } from "@/features/announcement/fn";
-import { Step3Schema } from "@/features/announcement/schemas";
 import type { CombinedFormValues } from "@/features/announcement/types";
 import { cn } from "@/lib/utils";
 import Zap from "@/public/zap";
@@ -36,38 +41,22 @@ import Zap from "@/public/zap";
  * Features real-time CPF formatting and success notification on completion
  */
 export function StepThree() {
-  const { getValues, setError, watch } = useFormContext<CombinedFormValues>();
+  const { watch, handleSubmit } = useFormContext<CombinedFormValues>();
 
-  const { nextStep, previousStep, canGoBack } = useMultiStepForm();
+  const { previousStep, canGoBack } = useMultiStepForm();
+  const { onSubmit, isPending } = useSubmitAnnouncement();
 
   const program = watch("program");
   const selectedCompany = (program as keyof typeof Companies) || "latam";
   const companyInfo = Companies[selectedCompany] || Companies.latam;
 
   /**
-   * Validates step 3 form data and progresses to final step
-   * Shows success notification with form data and advances to conclusion
+   * Validates step 3 form data and submits the complete form
+   * Uses React Hook Form's handleSubmit to properly trigger submission state
    */
-  const handleStepSubmit = useCallback(async () => {
-    const values = getValues();
-
-    const result = Step3Schema.safeParse(values);
-
-    if (!result.success) {
-      result.error.issues.forEach((error) => {
-        setError(error.path[0] as keyof CombinedFormValues, {
-          type: "manual",
-          message: error.message,
-        });
-      });
-      return;
-    }
-
-    toast.success(
-      `Dados salvos com sucesso! Redirecionando para a conclusão...\n${JSON.stringify(values, null, 2)}`,
-    );
-    nextStep();
-  }, [getValues, setError, nextStep]);
+  const handleStepSubmit = useCallback(() => {
+    handleSubmit(onSubmit)();
+  }, [handleSubmit, onSubmit]);
 
   return (
     <div className="flex flex-col md:flex-row space-y-0 md:space-y-6 lg:space-y-8 gap-0 md:gap-8">
@@ -233,9 +222,14 @@ export function StepThree() {
             className="rounded-full has-[>svg]:px-[27px] h-10 min-w-[142px]"
             data-step3-submit
             data-testid="step3-submit"
+            disabled={isPending}
           >
-            Concluir
-            <ArrowRight className="w-4 h-4" />
+            {isPending ? "Enviando..." : "Concluir"}
+            {isPending ? (
+              <Loader2Icon className="w-4 h-4 animate-spin" />
+            ) : (
+              <ArrowRight className="w-4 h-4" />
+            )}
           </Button>
         </div>
       </div>

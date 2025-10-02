@@ -37,14 +37,13 @@ export type FormValues = Record<string, unknown>;
 
 export type MultiStepFormContextType = {
   formValues: FormValues;
-  updateFormValues: (data: Partial<FormValues>) => void;
   currentStep: number;
   setCurrentStep: (step: number) => void;
   totalSteps: number;
   canGoBack: boolean;
   canGoForward: boolean;
   clearForm: () => void;
-  validateForm: () => { isValid: boolean; errors: Record<string, string> };
+  validateForm: { isValid: boolean; errors: Record<string, string> };
   validateStep: (step: number) => boolean;
   isStepValid: (step: number) => boolean;
   nextStep: () => void;
