@@ -58,6 +58,18 @@ Run E2E tests with UI:
 pnpm e2e:ui
 ```
 
+## 🏗️ Architecture
+
+### Feature-Based Structure
+
+The project follows a feature-based architecture where each feature (`announcement`, `offers`) is self-contained with:
+
+- **API Layer**: Data fetching and API calls
+- **Components**: Feature-specific React components
+- **Types**: TypeScript type definitions
+- **Schemas**: Zod validation schemas
+- **Business Logic**: Pure functions for data processing
+
 ## 📁 Project Structure
 
 ```
@@ -119,18 +131,6 @@ milhaspix/
     ├── tsconfig.json            # TypeScript configuration
     └── vitest.config.ts         # Vitest configuration
 ```
-
-## 🏗️ Architecture
-
-### Feature-Based Structure
-
-The project follows a feature-based architecture where each feature (`announcement`, `offers`) is self-contained with:
-
-- **API Layer**: Data fetching and API calls
-- **Components**: Feature-specific React components
-- **Types**: TypeScript type definitions
-- **Schemas**: Zod validation schemas
-- **Business Logic**: Pure functions for data processing
 
 ## 📚 Learn More
 

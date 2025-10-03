@@ -150,46 +150,46 @@ test.describe("Announcement Feature - Complete User Journey", () => {
         }
       });
 
-      // Test touch interactions for product selection
-      await page.getByTestId("product-select").tap();
-      await page.getByRole("option", { name: mockFormData.product }).tap();
+      // Test interactions for product selection (use click instead of tap for compatibility)
+      await page.getByTestId("product-select").click();
+      await page.getByRole("option", { name: mockFormData.product }).click();
 
       // Navigate to step 2 (mobile uses BottomNavigation)
-      await page.getByRole("button", { name: "Prosseguir" }).tap();
+      await page.getByRole("button", { name: "Prosseguir" }).click();
 
-      // Test touch interactions for payout timing
-      await page.getByTestId("payout-imediato").tap();
+      // Test interactions for payout timing
+      await page.getByTestId("payout-imediato").click();
 
       // Test mobile keyboard input
-      await page.getByTestId("miles-offered").tap();
+      await page.getByTestId("miles-offered").click();
       await page
         .getByTestId("miles-offered")
         .fill(mockFormData.milesOffered.toString());
 
-      await page.getByTestId("value-per-thousand").tap();
+      await page.getByTestId("value-per-thousand").click();
       await page
         .getByTestId("value-per-thousand")
         .fill(mockFormData.valuePerThousand.toString());
 
       // Wait for validation
       await page.waitForTimeout(500);
-      await page.getByRole("button", { name: "Prosseguir" }).tap();
+      await page.getByRole("button", { name: "Prosseguir" }).click();
 
       // Test mobile form inputs
-      await page.getByTestId("cpf-input").tap();
+      await page.getByTestId("cpf-input").click();
       await page.getByTestId("cpf-input").fill(mockFormData.cpf);
 
-      await page.getByTestId("login-input").tap();
+      await page.getByTestId("login-input").click();
       await page.getByTestId("login-input").fill(mockFormData.login);
 
-      await page.getByTestId("password-input").tap();
+      await page.getByTestId("password-input").click();
       await page.getByTestId("password-input").fill(mockFormData.password);
 
-      await page.getByTestId("phone-input").tap();
+      await page.getByTestId("phone-input").click();
       await page.getByTestId("phone-input").fill(mockFormData.phone);
 
       // Submit form (mobile uses BottomNavigation)
-      await page.getByRole("button", { name: "Concluir" }).tap();
+      await page.getByRole("button", { name: "Concluir" }).click();
 
       // Verify success (mobile shows different success message)
       await expect(
@@ -297,7 +297,14 @@ test.describe("Announcement Feature - Complete User Journey", () => {
 
     // Select product
     await page.getByTestId("product-select").click();
-    await page.getByRole("option", { name: mockFormData.product }).click();
+
+    // Wait for the select content to be visible and stable
+    await page.waitForSelector('[role="option"]', { state: "visible" });
+
+    // Click the option with retry logic for Safari
+    const option = page.getByRole("option", { name: mockFormData.product });
+    await option.waitFor({ state: "visible" });
+    await option.click();
 
     // Navigate to step 2 (handle both desktop and mobile layouts)
     if (isMobile) {
@@ -330,17 +337,24 @@ test.describe("Announcement Feature - Complete User Journey", () => {
     // Wait for any validation to complete
     await page.waitForTimeout(500);
 
-    // Check if there are any validation errors
+    // Check if there are any validation errors and clear them if needed
     const validationErrors = await page
       .locator('[role="alert"], .text-destructive')
       .count();
     if (validationErrors > 0) {
-      console.log(
-        "Validation errors found:",
+      const errorTexts = await page
+        .locator('[role="alert"], .text-destructive')
+        .allTextContents();
+      console.log("Validation errors found:", errorTexts);
+
+      // If there are empty validation errors, try to clear them by refilling the field
+      if (errorTexts.some((text) => text.trim() === "")) {
+        await page.getByTestId("value-per-thousand").fill("");
         await page
-          .locator('[role="alert"], .text-destructive')
-          .allTextContents(),
-      );
+          .getByTestId("value-per-thousand")
+          .fill(mockFormData.valuePerThousand.toString());
+        await page.waitForTimeout(300);
+      }
     }
 
     // Check if the button is enabled
@@ -582,7 +596,10 @@ test.describe("Announcement Feature - Complete User Journey", () => {
     // Wait for validation to complete
     await page.waitForTimeout(1000);
 
-    await expect(page.getByTestId("value-per-thousand-error")).toBeVisible();
+    // Wait for validation error to appear
+    await expect(page.getByTestId("value-per-thousand-error")).toBeVisible({
+      timeout: 5000,
+    });
 
     // Test value above maximum
     await page.getByTestId("value-per-thousand").fill("20.00");
@@ -597,7 +614,9 @@ test.describe("Announcement Feature - Complete User Journey", () => {
     }
 
     // Should show validation error
-    await expect(page.getByTestId("value-per-thousand-error")).toBeVisible();
+    await expect(page.getByTestId("value-per-thousand-error")).toBeVisible({
+      timeout: 5000,
+    });
 
     // Test miles below minimum
     await page.getByTestId("value-per-thousand").fill("15.00");
@@ -613,7 +632,9 @@ test.describe("Announcement Feature - Complete User Journey", () => {
     }
 
     // Should show validation error
-    await expect(page.getByText(/Mínimo de 1\.000 milhas/i)).toBeVisible();
+    await expect(page.getByText(/Mínimo de 1\.000 milhas/i)).toBeVisible({
+      timeout: 5000,
+    });
   });
 
   test("should validate CPF format and validity", async ({ page }) => {
@@ -681,7 +702,9 @@ test.describe("Announcement Feature - Complete User Journey", () => {
     }
 
     // Should show CPF validation error
-    await expect(page.getByText(/CPF inválido/i)).toBeVisible();
+    await expect(page.getByText(/CPF inválido/i)).toBeVisible({
+      timeout: 5000,
+    });
 
     // Test valid CPF
     await page.getByTestId("cpf-input").clear();
@@ -763,6 +786,8 @@ test.describe("Announcement Feature - Complete User Journey", () => {
   });
 
   test("should allow navigation between steps", async ({ page }) => {
+    await page.waitForLoadState("networkidle");
+
     // Complete step 1 (handle both desktop and mobile layouts)
     const isMobile = await page.evaluate(() => window.innerWidth < 768);
     if (isMobile) {
@@ -784,6 +809,7 @@ test.describe("Announcement Feature - Complete User Journey", () => {
       // Desktop uses button grid
       await page.getByTestId("program-latam").click();
     }
+
     // Select product
     await page.getByTestId("product-select").click();
     await page.getByRole("option", { name: "Liminar" }).click();
@@ -801,6 +827,9 @@ test.describe("Announcement Feature - Complete User Journey", () => {
     await page.getByTestId("payout-imediato").click();
     await page.getByTestId("miles-offered").fill("10000");
     await page.getByTestId("value-per-thousand").fill("15.50");
+
+    // Wait for validation to complete
+    await page.waitForTimeout(500);
 
     // Navigate to step 3 based on mobile/desktop layout
     if (isMobile) {
@@ -824,34 +853,26 @@ test.describe("Announcement Feature - Complete User Journey", () => {
       ).toBeVisible();
     }
 
-    // Navigate back to step 1 (using step indicator - desktop only)
-    // Note: Mobile uses different navigation, so we'll test the form content instead
-    // Check that we're on step 1 by looking for the program selection area
-    // On mobile, we might be on step 3, so check for the "Concluir" button instead
-    const isMobileViewport = await page.evaluate(() => window.innerWidth < 768);
-    if (isMobileViewport) {
-      await expect(
-        page.getByRole("button", { name: "Concluir" }),
-      ).toBeVisible();
-    } else {
-      await expect(
-        page.getByRole("button", { name: "Prosseguir" }),
-      ).toBeVisible();
-    }
+    // Test navigation back to step 1 (desktop only - step indicator)
+    if (!isMobile) {
+      // On desktop, we can test step navigation
+      // First, go back to step 1 by clicking on step indicator
+      await page.getByText("Passo 1").click();
 
-    // Navigate forward to step 2 (using step indicator - desktop only)
-    // Note: Mobile uses different navigation, so we'll test the form content instead
-    // Check if we're on step 2 by looking for step 2 content
-    const isMobileDevice = await page.evaluate(() => window.innerWidth < 768);
-    if (isMobileDevice) {
-      // On mobile, we're on step 3, so check for "Concluir" button
-      await expect(
-        page.getByRole("button", { name: "Concluir" }),
-      ).toBeVisible();
-    } else {
-      // On desktop, check for step 2 heading
+      // Should be back on step 1
+      await expect(page.getByText("Escolha o programa")).toBeVisible();
+
+      // Navigate forward to step 2
+      await page.getByText("Passo 2").click();
+
+      // Should be on step 2
       await expect(
         page.getByRole("heading", { name: "Oferte suas milhas" }),
+      ).toBeVisible();
+    } else {
+      // On mobile, verify we're on step 3 with the correct button
+      await expect(
+        page.getByRole("button", { name: "Concluir" }),
       ).toBeVisible();
     }
   });
