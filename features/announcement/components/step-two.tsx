@@ -234,7 +234,7 @@ export function StepTwo() {
                   };
 
                   return (
-                    <FormItem className="relative mb-2 sm:mb-6">
+                    <FormItem className="relative mb-3 sm:mb-7 2xl:mb-4">
                       <FormLabel>Milhas ofertadas</FormLabel>
                       <FormControl>
                         <div className="relative">
@@ -285,7 +285,7 @@ export function StepTwo() {
                   const hasValue = currentValue > 0;
 
                   return (
-                    <FormItem className="relative mb-6">
+                    <FormItem className="relative mb-6 sm:mb-7 2xl:mb-4">
                       <FormLabel>Valor a cada 1.000 milhas</FormLabel>
                       <FormControl>
                         <div className="relative">
