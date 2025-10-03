@@ -272,9 +272,6 @@ export function StepTwo() {
                   };
 
                   const currentValue = Number(field.value) || 0;
-                  const isValid =
-                    currentValue >= VALUE_PER_THOUSAND_MIN &&
-                    currentValue <= VALUE_PER_THOUSAND_MAX;
                   const isAboveMax = currentValue > VALUE_PER_THOUSAND_MAX;
                   const isBelowMin =
                     currentValue > 0 && currentValue < VALUE_PER_THOUSAND_MIN;
@@ -289,13 +286,15 @@ export function StepTwo() {
                             <div
                               className={cn(
                                 "size-[32px] rounded-full flex items-center justify-center",
-                                isValid ? "bg-muted" : "bg-destructive/10",
+                                !errors.valuePerThousand
+                                  ? "bg-muted"
+                                  : "bg-destructive/10",
                               )}
                             >
                               <span
                                 className={cn(
                                   "text-base font-medium",
-                                  isValid
+                                  !errors.valuePerThousand
                                     ? "text-foreground"
                                     : "text-destructive",
                                 )}
@@ -318,7 +317,7 @@ export function StepTwo() {
                           />
                           <div className="absolute right-4 top-1/2 -translate-y-1/2">
                             {hasValue ? (
-                              isValid ? (
+                              !errors.valuePerThousand ? (
                                 <Check className="w-4 h-4 text-green-500 transition-all duration-300 rotate-0 scale-100" />
                               ) : (
                                 <ChevronsDown
