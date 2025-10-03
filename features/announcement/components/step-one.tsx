@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
+import { ArrowLeft, ArrowRight, Lock, Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import { useFormContext } from "react-hook-form";
 import {
@@ -244,17 +244,36 @@ export function StepOne() {
                 )}
               />
 
-              <div className="space-y-2">
-                <Label className="text-foreground font-medium text-sm sm:text-base leading-tight">
-                  CPF's Disponíveis
-                </Label>
-                <div className="bg-muted border border-border rounded-full px-4 py-2.5 flex items-center justify-between h-12">
-                  <span className="text-muted-foreground font-medium text-sm">
-                    Ilimitado
-                  </span>
-                  <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-                </div>
-              </div>
+              <FormField
+                name="cpfAvailability"
+                render={({ field }) => (
+                  <FormItem className="relative">
+                    <Label className="text-foreground font-medium text-sm sm:text-base leading-tight">
+                      CPF's Disponíveis
+                    </Label>
+                    <FormControl>
+                      <Select
+                        value={field.value || "ilimitado"}
+                        onValueChange={field.onChange}
+                        disabled
+                      >
+                        <SelectTrigger
+                          className="rounded-full w-full !h-12"
+                          icon={
+                            <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
+                          }
+                        >
+                          <SelectValue placeholder="Selecione a disponibilidade" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="ilimitado">Ilimitado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage className="absolute bottom-0 left-0 right-0" />
+                  </FormItem>
+                )}
+              />
             </div>
           </CardContent>
         </Card>
@@ -315,13 +334,17 @@ function ProgramCard({
             className="flex md:hidden"
           >
             <AccordionItem value="item-1" className="border-0 w-full">
-              <AccordionTrigger className="flex flex-row gap-2 items-center justify-between px-0 py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+              <AccordionTrigger
+                className="flex flex-row gap-2 items-center justify-between px-0 py-0 hover:no-underline"
+                iconClosed={<Plus className="text-primary size-4" />}
+                iconOpen={<Minus className="text-muted-foreground size-4" />}
+              >
                 <h3 className="text-foreground font-medium text-base leading-tight">
                   Selecione o programa
                 </h3>
               </AccordionTrigger>
               <AccordionContent className="px-0 pt-2 pb-1">
-                <p className="text-xs leading-relaxed text-secondary-foreground">
+                <p className="text-xs font-normal leading-relaxed text-secondary-foreground">
                   Escolha de qual programa de fidelidade você quer vender suas
                   milhas. Use apenas contas em seu nome.
                 </p>
@@ -348,7 +371,7 @@ function ProgramCardText() {
           Selecione o programa
         </h3>
       </div>
-      <p className="text-xs leading-relaxed text-secondary-foreground">
+      <p className="text-xs font-normal leading-relaxed text-secondary-foreground">
         Escolha de qual programa de fidelidade você quer vender suas milhas. Use
         apenas contas em seu nome.
       </p>

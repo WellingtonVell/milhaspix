@@ -50,6 +50,7 @@ export function MultiStepFormProvider({ children }: { children: ReactNode }) {
     defaultValues: {
       program: "latam",
       product: "Liminar",
+      cpfAvailability: "ilimitado",
       payoutTiming: "imediato",
       milesOffered: 10000,
       valuePerThousand: 0,

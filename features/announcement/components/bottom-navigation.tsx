@@ -61,7 +61,7 @@ export function BottomNavigation() {
       </Button>
 
       {canGoForward && (
-        <span className="font-medium text-sm text-muted-foreground select-none">
+        <span className="font-medium text-lg leading-[7px] text-muted-foreground select-none">
           <span className="text-primary">{currentStep} </span>
           de {totalSteps}
         </span>

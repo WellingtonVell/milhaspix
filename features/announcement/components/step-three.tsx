@@ -4,11 +4,12 @@ import {
   ArrowLeft,
   ArrowRight,
   Loader2Icon,
-  Lock,
+  LockIcon,
+  UnlockIcon,
   UserCircle,
 } from "lucide-react";
 import Image from "next/image";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import {
   Accordion,
@@ -46,9 +47,39 @@ export function StepThree() {
   const { previousStep, canGoBack } = useMultiStepForm();
   const { onSubmit, isPending } = useSubmitAnnouncement();
 
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [revealTimer, setRevealTimer] = useState<NodeJS.Timeout | null>(null);
+
   const program = watch("program");
   const selectedCompany = (program as keyof typeof Companies) || "latam";
   const companyInfo = Companies[selectedCompany] || Companies.latam;
+
+  /**
+   * Temporarily reveals password for 3 seconds then hides it
+   * Clears any existing timer to prevent multiple timers
+   */
+  const handleRevealPassword = useCallback(() => {
+    if (revealTimer) {
+      clearTimeout(revealTimer);
+    }
+
+    setIsPasswordVisible(true);
+
+    const timer = setTimeout(() => {
+      setIsPasswordVisible(false);
+      setRevealTimer(null);
+    }, 3000);
+
+    setRevealTimer(timer);
+  }, [revealTimer]);
+
+  useEffect(() => {
+    return () => {
+      if (revealTimer) {
+        clearTimeout(revealTimer);
+      }
+    };
+  }, [revealTimer]);
 
   /**
    * Validates step 3 form data and submits the complete form
@@ -146,13 +177,28 @@ export function StepThree() {
                     <FormControl>
                       <div className="relative">
                         <Input
-                          type="password"
+                          type={isPasswordVisible ? "text" : "password"}
                           placeholder="1877"
                           className="rounded-[44px] w-full h-12 pl-4 pr-12 border-border focus:border-primary focus:ring-1 focus:ring-primary"
                           data-testid="password-input"
                           {...field}
                         />
-                        <Lock className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary" />
+                        <button
+                          type="button"
+                          onClick={handleRevealPassword}
+                          className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary hover:text-primary/80 transition-colors"
+                          aria-label={
+                            isPasswordVisible
+                              ? "Hide password"
+                              : "Reveal password"
+                          }
+                        >
+                          {isPasswordVisible ? (
+                            <UnlockIcon className="w-5 h-5" />
+                          ) : (
+                            <LockIcon className="w-5 h-5" />
+                          )}
+                        </button>
                       </div>
                     </FormControl>
                     <FormMessage className="absolute -bottom-5 left-0 right-0" />
@@ -174,7 +220,7 @@ export function StepThree() {
                           value={field.value || ""}
                           defaultCountry="BR"
                           placeholder="(19) 98277-3123"
-                          className="flex items-center rounded-[44px] border border-border focus-within:border-primary focus-within:ring-1 focus-within:ring-primary h-12 overflow-hidden"
+                          className="flex items-center rounded-[44px] border border-border focus-within:border-primary focus-within:ring-1 focus-within:ring-primary h-12 overflow-hidden [&_[data-slot=trigger-icon]]:hidden [&_[data-slot=country-select-trigger]]:h-8 [&_[data-slot=country-select-trigger]]:ml-2 [&_[data-slot=country-select-trigger]]:rounded-full [&_[data-slot=country-select-trigger]]:border-r-0 [&_[data-slot=flag-icon]]:size-5 [&_[data-slot=flag-icon]]:rounded-full"
                           data-testid="phone-input"
                           limitMaxLength
                         />
@@ -280,8 +326,8 @@ function EstimatedValueDisplay({
         )}
       >
         <Card className="p-4 flex flex-row items-center justify-between bg-success/10 text-success text-lg font-medium rounded-none rounded-t-2xl">
-          <CardTitle>Receba até</CardTitle>
-          <CardTitle>
+          <CardTitle className="text-base font-medium">Receba até</CardTitle>
+          <CardTitle className="text-base font-medium">
             {hasValidData ? (
               `R$ ${estimatedValue.toLocaleString("pt-BR", {
                 minimumFractionDigits: 2,
@@ -297,8 +343,8 @@ function EstimatedValueDisplay({
   ) : (
     <div className={cn("flex-col gap-2 lg:flex hidden", className)}>
       <Card className="p-4 flex flex-row items-center justify-between bg-success/10 text-success text-lg font-medium rounded-lg">
-        <CardTitle>Receba até</CardTitle>
-        <CardTitle>
+        <CardTitle className="text-base font-medium">Receba até</CardTitle>
+        <CardTitle className="text-base font-medium">
           {hasValidData ? (
             `R$ ${estimatedValue.toLocaleString("pt-BR", {
               minimumFractionDigits: 2,

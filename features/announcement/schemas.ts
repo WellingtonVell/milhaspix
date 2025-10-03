@@ -36,6 +36,16 @@ export const Step1Schema = z.object({
     .min(1, { message: "Produto é obrigatório" })
     .max(100, { message: "Produto deve ter no máximo 100 caracteres" })
     .trim(),
+  cpfAvailability: z
+    .enum(["ilimitado"], {
+      error: (issue) =>
+        issue.input === undefined
+          ? "Disponibilidade de CPF é obrigatória"
+          : "Disponibilidade de CPF inválida",
+    })
+    .refine((v) => !!v, {
+      message: "Disponibilidade de CPF é obrigatória",
+    }),
 });
 
 /**

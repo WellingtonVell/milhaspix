@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     // const isSuccess = false;
-    const isSuccess = Math.random() < 0.9;
+    const isSuccess = true;
 
     if (!isSuccess) {
       return NextResponse.json(

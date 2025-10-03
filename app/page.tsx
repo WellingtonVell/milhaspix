@@ -3,6 +3,7 @@ import {
   HydrationBoundary,
   QueryClient,
 } from "@tanstack/react-query";
+import { Suspense } from "react";
 import { Header } from "@/components/header";
 import { OFFERS_KEYS } from "@/features/offers/api/keys";
 import { fetchOffersData } from "@/features/offers/api/queries";
@@ -20,7 +21,9 @@ export default function Page() {
     <>
       <Header />
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <OffersList />
+        <Suspense>
+          <OffersList />
+        </Suspense>
       </HydrationBoundary>
     </>
   );

@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  ChevronsDown,
-  Plane,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronsDown } from "lucide-react";
 import { useReducer } from "react";
 import { useFormContext } from "react-hook-form";
 import {
@@ -42,13 +36,18 @@ import type {
 } from "@/features/announcement/types";
 import { useDebounce } from "@/hooks/use-debounce";
 import { cn } from "@/lib/utils";
+import Plane from "@/public/plane";
 
-// Brazilian currency formatter for price display
 const moneyFormatter = Intl.NumberFormat("pt-BR", {
   currency: "BRL",
   currencyDisplay: "symbol",
   currencySign: "standard",
   style: "currency",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+const numberFormatter = Intl.NumberFormat("pt-BR", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 });
@@ -101,7 +100,7 @@ export function StepTwo() {
   const bestAverage = calculateBestAverage();
 
   const initialCurrencyValue = watch("valuePerThousand")
-    ? moneyFormatter.format(Number(watch("valuePerThousand")))
+    ? numberFormatter.format(Number(watch("valuePerThousand")))
     : "";
 
   // Currency input formatter that converts raw input to Brazilian currency format
@@ -109,7 +108,7 @@ export function StepTwo() {
     (_: string, next: string) => {
       const digits = next.replace(/\D/g, "");
       if (!digits) return "";
-      return moneyFormatter.format(Number(digits) / 100);
+      return numberFormatter.format(Number(digits) / 100);
     },
     initialCurrencyValue,
   );
@@ -149,11 +148,22 @@ export function StepTwo() {
                 Oferte suas milhas
               </h2>
             </div>
-            <div className="hidden 2xl:flex">
+            <div
+              className={cn(
+                "hidden 2xl:flex min-h-[30px] rounded-full text-center items-center justify-center px-4",
+                errors.valuePerThousand && "bg-destructive/10",
+              )}
+            >
               {errors.valuePerThousand && (
                 <p className="text-sm text-destructive font-medium">
-                  Escolha entre {moneyFormatter.format(VALUE_PER_THOUSAND_MIN)}{" "}
-                  e {moneyFormatter.format(VALUE_PER_THOUSAND_MAX)}
+                  <span className="mr-1">Escolha entre</span>
+                  <span className="font-semibold">
+                    {moneyFormatter.format(VALUE_PER_THOUSAND_MIN)}
+                  </span>
+                  <span className="mx-1">e</span>
+                  <span className="font-semibold">
+                    {moneyFormatter.format(VALUE_PER_THOUSAND_MAX)}
+                  </span>
                 </p>
               )}
             </div>
@@ -272,9 +282,28 @@ export function StepTwo() {
 
                   return (
                     <FormItem className="relative mb-2 md:mb-0">
-                      <FormLabel>Valor a cada 1.000 milhas (R$)</FormLabel>
+                      <FormLabel>Valor a cada 1.000 milhas</FormLabel>
                       <FormControl>
                         <div className="relative">
+                          <div className="absolute left-2 top-1/2 -translate-y-1/2 z-10">
+                            <div
+                              className={cn(
+                                "size-[32px] rounded-full flex items-center justify-center",
+                                isValid ? "bg-muted" : "bg-destructive/10",
+                              )}
+                            >
+                              <span
+                                className={cn(
+                                  "text-base font-medium",
+                                  isValid
+                                    ? "text-foreground"
+                                    : "text-destructive",
+                                )}
+                              >
+                                R$
+                              </span>
+                            </div>
+                          </div>
                           <Input
                             type="text"
                             inputMode="decimal"
@@ -283,8 +312,8 @@ export function StepTwo() {
                             onBlur={field.onBlur}
                             name={field.name}
                             ref={field.ref}
-                            className="rounded-full w-full !h-[44px] pr-12 text-start font-mono"
-                            placeholder="R$ 25,00"
+                            className="rounded-full w-full !h-[44px] pl-12 pr-12 text-start font-mono"
+                            placeholder="25,00"
                             data-testid="value-per-thousand"
                           />
                           <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -369,7 +398,7 @@ export function StepTwo() {
                     </FormControl>
 
                     {!errors.averageMilesPerPassenger && (
-                      <FormDescription className="sm:hidden text-success">
+                      <FormDescription className="sm:hidden text-success text-center">
                         Melhor média para a sua oferta:{" "}
                         <span className="font-semibold">
                           {bestAverage.toLocaleString("pt-BR")}
@@ -386,8 +415,14 @@ export function StepTwo() {
             <div className="space-y-2">
               {errors.valuePerThousand && (
                 <p className="text-sm text-destructive font-medium flex 2xl:hidden">
-                  Escolha entre {moneyFormatter.format(VALUE_PER_THOUSAND_MIN)}{" "}
-                  e {moneyFormatter.format(VALUE_PER_THOUSAND_MAX)}
+                  <span className="mr-1">Escolha entre</span>
+                  <span className="font-semibold">
+                    {moneyFormatter.format(VALUE_PER_THOUSAND_MIN)}{" "}
+                  </span>
+                  <span className="mx-1">e</span>
+                  <span className="font-semibold">
+                    {moneyFormatter.format(VALUE_PER_THOUSAND_MAX)}
+                  </span>
                 </p>
               )}
 
@@ -512,9 +547,9 @@ function EstimatedValue() {
   return (
     <div>
       <div className="lg:block flex-col gap-2 hidden">
-        <Label className="text-lg font-medium">Receba até:</Label>
+        <Label className="text-base font-medium">Receba até:</Label>
         <Card className="py-4 flex flex-row items-center justify-between bg-success/10 text-success text-lg font-medium">
-          <CardContent>R$</CardContent>
+          <CardContent className="text-base font-medium">R$</CardContent>
           <CardContent>
             {estimatedValue.toLocaleString("pt-BR", {
               minimumFractionDigits: 2,
@@ -525,8 +560,8 @@ function EstimatedValue() {
       </div>
       <div className="flex flex-col gap-2 lg:hidden absolute bottom-0 left-0 right-0">
         <Card className="p-4 flex flex-row items-center justify-between bg-success/10 text-success text-lg font-medium rounded-none rounded-t-2xl">
-          <CardTitle>Receba até</CardTitle>
-          <CardTitle>
+          <CardTitle className="text-base font-medium">Receba até</CardTitle>
+          <CardTitle className="text-base font-medium">
             R${" "}
             {estimatedValue.toLocaleString("pt-BR", {
               minimumFractionDigits: 2,

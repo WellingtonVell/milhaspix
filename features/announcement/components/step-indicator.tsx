@@ -92,7 +92,7 @@ function StepItem({
         <div className={cn("flex-1 pl-4", isFirst && "mb-5", isLast && "mt-6")}>
           <h3
             className={cn(
-              "font-medium text-base leading-none font-['DM_Sans']",
+              "font-medium text-base leading-none",
               isActive
                 ? "text-secondary-foreground"
                 : isCompleted
@@ -104,7 +104,7 @@ function StepItem({
           </h3>
           <p
             className={cn(
-              "text-sm mt-0.5 leading-[1.6] font-['DM_Sans']",
+              "text-xs mt-0.5",
               isActive
                 ? "text-secondary-foreground"
                 : isCompleted

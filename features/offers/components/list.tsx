@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { ChevronDown, Search } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useQueryState } from "nuqs";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,12 @@ import {
 } from "@/components/ui/table";
 import { useOffersData } from "@/features/offers/api/queries";
 import { Header, ListSkeleton } from "@/features/offers/components/skeleton";
-import { headers, options } from "@/features/offers/constants";
+import {
+  headers,
+  options,
+  programImages,
+  statusConfig,
+} from "@/features/offers/constants";
 import type { Offer } from "@/features/offers/types";
 import { cn } from "@/lib/utils";
 
@@ -35,8 +40,14 @@ import { cn } from "@/lib/utils";
  */
 export function OffersList() {
   const { data, isLoading, error } = useOffersData();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useQueryState("search", {
+    defaultValue: "",
+    shallow: false,
+  });
+  const [statusFilter, setStatusFilter] = useQueryState("status", {
+    defaultValue: "all",
+    shallow: false,
+  });
 
   if (isLoading) {
     return <ListSkeleton />;
@@ -59,13 +70,16 @@ export function OffersList() {
   }
 
   const filteredOffers = data.offers.filter((offer) => {
+    const searchValue = searchTerm || "";
+    const statusValue = statusFilter || "all";
+
     const matchesSearch =
-      offer.offerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      offer.accountLogin.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      offer.loyaltyProgram.toLowerCase().includes(searchTerm.toLowerCase());
+      offer.offerId.toLowerCase().includes(searchValue.toLowerCase()) ||
+      offer.accountLogin.toLowerCase().includes(searchValue.toLowerCase()) ||
+      offer.loyaltyProgram.toLowerCase().includes(searchValue.toLowerCase());
 
     const matchesStatus =
-      statusFilter === "all" || offer.offerStatus === statusFilter;
+      statusValue === "all" || offer.offerStatus === statusValue;
 
     return matchesSearch && matchesStatus;
   });
@@ -99,24 +113,6 @@ export function OffersList() {
  * @param status - The offer status to display
  */
 export function StatusBadge({ status }: { status: Offer["offerStatus"] }) {
-  const statusConfig = {
-    Ativa: {
-      variant: "default" as const,
-      className: "bg-green-100 text-green-800 border-green-200",
-      dotClassName: "bg-green-500",
-    },
-    "Em Utilizacao": {
-      variant: "secondary" as const,
-      className: "bg-blue-100 text-blue-800 border-blue-200",
-      dotClassName: "bg-blue-500",
-    },
-    Inativo: {
-      variant: "outline" as const,
-      className: "bg-gray-100 text-gray-600 border-gray-200",
-      dotClassName: "bg-gray-500",
-    },
-  };
-
   const config = statusConfig[status] || statusConfig.Inativo;
 
   return (
@@ -130,14 +126,7 @@ export function StatusBadge({ status }: { status: Offer["offerStatus"] }) {
   );
 }
 
-export function LoyaltyProgramIcon({ program }: { program: string }) {
-  const programImages: Record<string, string> = {
-    Smiles: "/images/smiles-icon.png",
-    TudoAzul: "/images/tudoazul-icon.png",
-    Latam: "/images/latam.png",
-    AirPortugal: "/images/airportugal.png",
-  };
-
+function LoyaltyProgramIcon({ program }: { program: string }) {
   const imageSrc = programImages[program] || "/images/smiles.png";
 
   return (
@@ -261,6 +250,7 @@ function DesktopTableView({ offers }: { offers: Offer[] }) {
 
 /**
  * Subheader component with search and status filter
+ * Uses nuqs for URL state management
  * @param searchTerm - The search term
  * @param setSearchTerm - The function to set the search term
  * @param statusFilter - The status filter
@@ -272,10 +262,10 @@ function SubHeader({
   statusFilter,
   setStatusFilter,
 }: {
-  searchTerm: string;
-  setSearchTerm: (value: string) => void;
-  statusFilter: string;
-  setStatusFilter: (value: string) => void;
+  searchTerm: string | null;
+  setSearchTerm: (value: string | null) => void;
+  statusFilter: string | null;
+  setStatusFilter: (value: string | null) => void;
 }) {
   return (
     <div className="grid grid-cols-[1fr_auto] lg:grid-cols-[1fr_auto_auto] gap-4 items-start sm:items-center lg:border rounded-t-2xl p-0 lg:p-2 px-4 pb-4 lg:min-h-20 mt-5 sm:mt-0">
@@ -287,13 +277,13 @@ function SubHeader({
         <Input
           type="text"
           placeholder="Login de acesso, ID da oferta..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          value={searchTerm || ""}
+          onChange={(e) => setSearchTerm(e.target.value || null)}
           className="w-full pr-4 py-2 border h-8 lg:h-10 rounded-full lg:min-w-[352px]"
         />
       </div>
 
-      <Select value={statusFilter} onValueChange={setStatusFilter}>
+      <Select value={statusFilter || "all"} onValueChange={setStatusFilter}>
         <SelectTrigger
           className="w-full !h-8 lg:!h-10 rounded-full max-w-[96px] lg:max-w-[120px] lg:min-w-[201px]"
           icon={<ChevronDown className="size-5 text-primary" />}

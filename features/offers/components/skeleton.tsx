@@ -1,7 +1,9 @@
 "use client";
 
 import { ChevronDown, Plus, Search } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,10 +18,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  LoyaltyProgramIcon,
-  StatusBadge,
-} from "@/features/offers/components/list";
-import { headers } from "@/features/offers/constants";
+  headers,
+  programImages,
+  statusConfig,
+} from "@/features/offers/constants";
 import type { Offer } from "@/features/offers/types";
 import { cn } from "@/lib/utils";
 
@@ -95,9 +97,9 @@ function OfferCardSkeleton() {
         <Card key={key} className="w-full rounded-4xl">
           <CardHeader className="!pb-2 border-b">
             <div className="flex items-center justify-between">
-              <LoyaltyProgramIcon program={program} />
+              <LoyaltyProgramIconSkeleton program={program} />
               <div className="flex items-end flex-col gap-2">
-                <StatusBadge status={status} />
+                <StatusBadgeSkeleton status={status} />
                 {/* Date text - text-xs */}
                 <Skeleton className="w-16 h-3" />
               </div>
@@ -120,6 +122,47 @@ function OfferCardSkeleton() {
         </Card>
       ))}
     </>
+  );
+}
+
+function StatusBadgeSkeleton({ status }: { status: Offer["offerStatus"] }) {
+  const config = statusConfig[status] || statusConfig.Inativo;
+
+  return (
+    <Badge
+      variant={config.variant}
+      className={cn("rounded-full blur-sm opacity-70", config.className)}
+    >
+      <div className={cn("w-2 h-2 rounded-full", config.dotClassName)} />
+      {status}
+    </Badge>
+  );
+}
+
+function LoyaltyProgramIconSkeleton({ program }: { program: string }) {
+  const imageSrc = programImages[program] || "/images/smiles.png";
+
+  return (
+    <div className="flex items-center gap-2 lg:translate-x-4">
+      <Image
+        src={imageSrc}
+        alt={program}
+        width={40}
+        height={40}
+        className="object-cover rounded-full blur-sm opacity-70"
+      />
+      <div className="flex flex-col">
+        <span
+          className={cn(
+            "font-bold text-sm blur-sm opacity-70",
+            program === "Smiles" ? "text-orange-600" : "text-blue-600",
+          )}
+        >
+          {program}
+        </span>
+        <span className="text-xs text-gray-600 blur-sm opacity-70">Comum</span>
+      </div>
+    </div>
   );
 }
 
@@ -182,10 +225,10 @@ function DesktopTableSkeleton() {
             })).map(({ key, program, status }) => (
               <TableRow key={key} className="border-none">
                 <TableCell className="flex justify-start py-4">
-                  <LoyaltyProgramIcon program={program} />
+                  <LoyaltyProgramIconSkeleton program={program} />
                 </TableCell>
                 <TableCell className="text-center py-4">
-                  <StatusBadge status={status} />
+                  <StatusBadgeSkeleton status={status} />
                 </TableCell>
                 <TableCell className="text-center text-sm text-gray-600 py-4">
                   {/* Offer ID - text-sm */}

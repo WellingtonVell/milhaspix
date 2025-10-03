@@ -105,13 +105,18 @@ const CountrySelect = ({
           type="button"
           variant="outline"
           className="flex gap-1 rounded-e-none rounded-s-[40px] border-r-0 px-3 focus:z-10 bg-[#F3F3F3] h-12 border-0 focus:ring-0 focus:outline-none"
+          data-slot="country-select-trigger"
           disabled={disabled}
         >
+          {selectedCountry
+            ? `+${RPNInput.getCountryCallingCode(selectedCountry)}`
+            : ""}
           <FlagComponent
             country={selectedCountry}
             countryName={selectedCountry}
           />
           <ChevronsUpDown
+            data-slot="trigger-icon"
             className={cn(
               "-mr-2 size-4 opacity-50",
               disabled ? "hidden" : "opacity-100",
@@ -197,7 +202,10 @@ const FlagComponent = ({ country, countryName }: RPNInput.FlagProps) => {
   const Flag = flags[country];
 
   return (
-    <span className="flex h-4 w-6 overflow-hidden rounded-sm bg-foreground/20 [&_svg:not([class*='size-'])]:size-full">
+    <span
+      data-slot="flag-icon"
+      className="flex h-4 w-6 overflow-hidden rounded-sm bg-foreground/20 [&_svg:not([class*='size-'])]:size-full"
+    >
       {Flag && <Flag title={countryName} />}
     </span>
   );
