@@ -1,4 +1,5 @@
 import { CheckIcon, ChevronsUpDown } from "lucide-react";
+import Image from "next/image";
 import * as React from "react";
 import * as RPNInput from "react-phone-number-input";
 import flags from "react-phone-number-input/flags";
@@ -111,10 +112,19 @@ const CountrySelect = ({
           {selectedCountry
             ? `+${RPNInput.getCountryCallingCode(selectedCountry)}`
             : ""}
-          <FlagComponent
-            country={selectedCountry}
-            countryName={selectedCountry}
-          />
+          {selectedCountry === "BR" ? (
+            <Image
+              src="/images/rounded-br.png"
+              alt="Brazil"
+              width={20}
+              height={20}
+            />
+          ) : (
+            <FlagComponent
+              country={selectedCountry}
+              countryName={selectedCountry}
+            />
+          )}
           <ChevronsUpDown
             data-slot="trigger-icon"
             className={cn(
