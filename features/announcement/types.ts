@@ -43,7 +43,6 @@ export type MultiStepFormContextType = {
   canGoBack: boolean;
   canGoForward: boolean;
   clearForm: () => void;
-  validateForm: { isValid: boolean; errors: Record<string, string> };
   validateStep: (step: number) => boolean;
   isStepValid: (step: number) => boolean;
   nextStep: () => void;

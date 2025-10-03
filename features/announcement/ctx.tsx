@@ -146,31 +146,6 @@ export function MultiStepFormProvider({ children }: { children: ReactNode }) {
   }, [methods]);
 
   /**
-   * Validates entire form using combined schema
-   * Memoized to prevent unnecessary recalculations
-   * @returns Object with validation result and error messages
-   */
-  const validateForm = useMemo(() => {
-    try {
-      CombinedFormSchema.parse(formValues);
-      return { isValid: true, errors: {} };
-    } catch (error: unknown) {
-      const errors: Record<string, string> = {};
-      if (error && typeof error === "object" && "errors" in error) {
-        const zodError = error as {
-          errors: Array<{ path: string[]; message: string }>;
-        };
-        zodError.errors.forEach((err) => {
-          if (err.path && err.path.length > 0) {
-            errors[err.path.join(".")] = err.message;
-          }
-        });
-      }
-      return { isValid: false, errors };
-    }
-  }, [formValues]);
-
-  /**
    * Validates specific step using appropriate schema
    * @param step - Step number to validate (1-4)
    * @returns true if step data is valid, false otherwise
@@ -269,7 +244,6 @@ export function MultiStepFormProvider({ children }: { children: ReactNode }) {
           canGoBack: navigationState.canGoBack,
           canGoForward: navigationState.canGoForward,
           clearForm,
-          validateForm,
           validateStep,
           isStepValid,
           nextStep,
