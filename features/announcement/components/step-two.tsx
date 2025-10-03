@@ -340,7 +340,10 @@ export function StepTwo() {
                             ) : null}
                           </div>
                           {errors.valuePerThousand && (
-                            <div className="flex absolute">
+                            <div
+                              className="flex absolute"
+                              data-testid="value-per-thousand-error"
+                            >
                               <p className="text-sm text-destructive font-medium flex 2xl:hidden">
                                 <span className="mr-1">Escolha entre</span>
                                 <span className="font-semibold">

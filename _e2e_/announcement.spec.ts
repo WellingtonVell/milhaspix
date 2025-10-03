@@ -1,12 +1,11 @@
 import { expect, type Page, test } from "@playwright/test";
-import { STORAGE_KEY } from "@/features/announcement/ctx";
 
 const mockFormData = {
   program: "latam",
   product: "Liminar",
   payoutTiming: "imediato",
   milesOffered: 10000,
-  valuePerThousand: 15.5,
+  valuePerThousand: 15.51,
   averagePerPassengerEnabled: false,
   cpf: "123.456.789-09",
   login: "testuser123",
@@ -184,30 +183,14 @@ test.describe("Announcement Feature - Complete User Journey", () => {
     // Wait for validation to complete
     await page.waitForTimeout(1000);
 
-    // Check for any validation errors
-    const validationErrors = await page
-      .locator('[role="alert"], .text-destructive')
-      .count();
-    if (validationErrors > 0) {
-      const errorTexts = await page
-        .locator('[role="alert"], .text-destructive')
-        .allTextContents();
-      console.log("Validation errors found:", errorTexts);
-    }
-
-    // Should show validation error
-    await expect(page.locator('[role="alert"], .text-destructive')).toHaveCount(
-      4,
-    );
+    await expect(page.getByTestId("value-per-thousand-error")).toBeVisible();
 
     // Test value above maximum
     await page.getByTestId("value-per-thousand").fill("20.00");
     await page.getByTestId("step2-next").click();
 
     // Should show validation error
-    await expect(page.locator('[role="alert"], .text-destructive')).toHaveCount(
-      4,
-    );
+    await expect(page.getByTestId("value-per-thousand-error")).toBeVisible();
 
     // Test miles below minimum
     await page.getByTestId("value-per-thousand").fill("15.00");
@@ -494,6 +477,6 @@ test.describe("Announcement Feature - Complete User Journey", () => {
    * Centralizes localStorage access for consistent testing
    */
   async function getLocalStorageData(page: Page) {
-    return page.evaluate(() => localStorage.getItem(STORAGE_KEY));
+    return page.evaluate(() => localStorage.getItem("milhaspix-form-data"));
   }
 });
