@@ -111,7 +111,17 @@ export function StepThree() {
               <Image
                 src={companyInfo.src}
                 alt={companyInfo.alt}
-                width={120}
+                width={
+                  companyInfo.name === "SMILES"
+                    ? 80
+                    : companyInfo.name === "LATAM"
+                      ? 100
+                      : companyInfo.name === "Tudo Azul"
+                        ? 70
+                        : companyInfo.name === "Airportugal"
+                          ? 120
+                          : 100
+                }
                 height={32}
                 className="object-contain"
               />
