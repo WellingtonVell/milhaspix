@@ -22,7 +22,7 @@ export function Conclusion() {
   };
 
   return (
-    <div className="flex items-center justify-center gap-4 my-auto lg:my-0 lg:mt-20">
+    <div className="flex items-center justify-center gap-4 my-auto lg:my-0 lg:mt-20 2xl:mt-0 2xl:min-h-[443px] 2xl:border 2xl:rounded-lg 2xl:border-border/50 2xl:shadow">
       <div className="p-4 flex flex-col items-center text-center gap-4">
         <div className="w-[60px] h-[61px] relative">
           <Image
@@ -35,9 +35,7 @@ export function Conclusion() {
         </div>
 
         <h1 className="text-primary text-xl font-medium leading-[1.4em] text-center">
-          Ordem de venda
-          <br />
-          criada com sucesso!
+          Ordem de venda criada com sucesso!
         </h1>
 
         <p className="text-sidebar-foreground text-sm font-medium leading-[2em] text-center max-w-md">
