@@ -4,7 +4,32 @@ import { CombinedFormSchema } from "@/features/announcement/schemas";
 
 export async function POST(request: NextRequest) {
   try {
-    const rawData = await request.json();
+    const contentType = request.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Content-Type must be application/json",
+          code: "INVALID_CONTENT_TYPE",
+        },
+        { status: 400 },
+      );
+    }
+
+    let rawData: unknown;
+    try {
+      rawData = await request.json();
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid JSON in request body",
+          code: "INVALID_JSON",
+        },
+        { status: 400 },
+      );
+    }
+
     const parsed = CombinedFormSchema.safeParse(rawData);
 
     if (!parsed.success) {
