@@ -28,7 +28,7 @@ export function Form() {
         />
       </div>
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full relative">
+      <div className="flex-1 flex flex-col lg:flex-row gap-6 p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full relative pb-15">
         <div className="w-full lg:w-auto lg:min-w-64 hidden lg:block">
           <StepIndicator />
         </div>

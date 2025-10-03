@@ -85,7 +85,7 @@ export function OffersList() {
   });
 
   return (
-    <main className="container sm:mx-auto">
+    <main className="container sm:mx-auto pb-8">
       <div className="lg:max-w-[1216px] mx-auto lg:px-4">
         <Header />
 
@@ -273,7 +273,7 @@ function SubHeader({
         Todas ofertas
       </p>
       <div className="relative">
-        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary size-5" />
+        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary size-5 bg-white" />
         <Input
           type="text"
           placeholder="Login de acesso, ID da oferta..."
