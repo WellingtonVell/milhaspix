@@ -5,6 +5,8 @@ import {
   ArrowRight,
   Loader2Icon,
   LockIcon,
+  Minus,
+  Plus,
   UnlockIcon,
   UserCircle,
 } from "lucide-react";
@@ -382,7 +384,11 @@ function AccountCard({
             className="flex md:hidden"
           >
             <AccordionItem value="item-1" className="border-0 w-full">
-              <AccordionTrigger className="flex flex-row gap-2 items-center justify-between px-0 py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+              <AccordionTrigger
+                className="flex flex-row gap-2 items-center justify-between px-0 py-0 hover:no-underline"
+                iconClosed={<Plus className="text-primary size-4" />}
+                iconOpen={<Minus className="text-muted-foreground size-4" />}
+              >
                 <h3 className="text-foreground font-medium text-base leading-tight">
                   Dados da conta
                 </h3>

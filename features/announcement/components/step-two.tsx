@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Check, ChevronsDown } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  ChevronsDown,
+  Minus,
+  Plus,
+} from "lucide-react";
 import { useReducer } from "react";
 import { useFormContext } from "react-hook-form";
 import {
@@ -502,7 +509,11 @@ function MilhasCard({
               className="flex md:hidden"
             >
               <AccordionItem value="item-1" className="border-0 w-full">
-                <AccordionTrigger className="flex flex-row gap-2 items-center justify-between px-0 py-0 hover:no-underline [&[data-state=open]>svg]:rotate-180">
+                <AccordionTrigger
+                  className="flex flex-row gap-2 items-center justify-between px-0 py-0 hover:no-underline"
+                  iconClosed={<Plus className="text-primary size-4" />}
+                  iconOpen={<Minus className="text-muted-foreground size-4" />}
+                >
                   <h3 className="text-foreground font-medium text-base leading-tight">
                     Média de milhas
                   </h3>
