@@ -213,7 +213,7 @@ export function StepTwo() {
               )}
             />
 
-            <div className="grid sm:grid-cols-2 gap-4 mb-6">
+            <div className="grid sm:grid-cols-2 gap-4 mb-0 2xl:mb-2">
               <FormField
                 name="milesOffered"
                 render={({ field }) => {
@@ -234,7 +234,7 @@ export function StepTwo() {
                   };
 
                   return (
-                    <FormItem className="relative mb-2 md:mb-0">
+                    <FormItem className="relative mb-2 sm:mb-6">
                       <FormLabel>Milhas ofertadas</FormLabel>
                       <FormControl>
                         <div className="relative">
@@ -285,7 +285,7 @@ export function StepTwo() {
                   const hasValue = currentValue > 0;
 
                   return (
-                    <FormItem className="relative mb-2 md:mb-0">
+                    <FormItem className="relative mb-6">
                       <FormLabel>Valor a cada 1.000 milhas</FormLabel>
                       <FormControl>
                         <div className="relative">
@@ -339,6 +339,24 @@ export function StepTwo() {
                               )
                             ) : null}
                           </div>
+                          {errors.valuePerThousand && (
+                            <div className="flex absolute">
+                              <p className="text-sm text-destructive font-medium flex 2xl:hidden">
+                                <span className="mr-1">Escolha entre</span>
+                                <span className="font-semibold">
+                                  {moneyFormatter.format(
+                                    VALUE_PER_THOUSAND_MIN,
+                                  )}{" "}
+                                </span>
+                                <span className="mx-1">e</span>
+                                <span className="font-semibold">
+                                  {moneyFormatter.format(
+                                    VALUE_PER_THOUSAND_MAX,
+                                  )}
+                                </span>
+                              </p>
+                            </div>
+                          )}
                         </div>
                       </FormControl>
                     </FormItem>
@@ -347,92 +365,83 @@ export function StepTwo() {
               />
             </div>
 
-            <FormField
-              name="averagePerPassengerEnabled"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center gap-3">
-                    <FormControl>
-                      <Switch
-                        checked={field.value || false}
-                        onCheckedChange={(checked) => {
-                          field.onChange(checked);
-                          if (!checked) {
-                            setValue("averageMilesPerPassenger", undefined);
-                          }
-                        }}
-                        className="h-6 w-11 [&_[data-slot=switch-thumb]]:size-5 [&_[data-slot=switch-thumb]]:data-[state=checked]:translate-x-[calc(99%)]"
-                      />
-                    </FormControl>
-                    <FormLabel className="text-muted-foreground font-medium text-base leading-tight">
-                      Definir média de milhas por passageiro
-                    </FormLabel>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex 2xl:flex-col gap-2 flex-col-reverse">
+              <div className="flex flex-col gap-2">
+                <FormField
+                  name="averagePerPassengerEnabled"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex items-center gap-3">
+                        <FormControl>
+                          <Switch
+                            checked={field.value || false}
+                            onCheckedChange={(checked) => {
+                              field.onChange(checked);
+                              if (!checked) {
+                                setValue("averageMilesPerPassenger", undefined);
+                              }
+                            }}
+                            className="h-6 w-11 [&_[data-slot=switch-thumb]]:size-5 [&_[data-slot=switch-thumb]]:data-[state=checked]:translate-x-[calc(99%)]"
+                          />
+                        </FormControl>
+                        <FormLabel className="text-muted-foreground font-medium text-base leading-tight">
+                          Definir média de milhas por passageiro
+                        </FormLabel>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            {watch("averagePerPassengerEnabled") && (
-              <FormField
-                name="averageMilesPerPassenger"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Média de milhas por passageiro</FormLabel>
-                    <FormControl>
-                      <div className="grid sm:grid-cols-2 gap-2">
-                        <Input
-                          type="tel"
-                          {...field}
-                          value={field.value?.toString() || ""}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value) || undefined)
-                          }
-                          className="rounded-full w-full !h-12"
-                          placeholder="Ex: 5000"
-                          maxLength={10}
-                        />
-                        <div className="hidden sm:flex flex-row gap-2 items-center justify-center bg-success/10 rounded-full">
-                          <p className="text-center text-success">
+                {watch("averagePerPassengerEnabled") && (
+                  <FormField
+                    name="averageMilesPerPassenger"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <div className="grid sm:grid-cols-2 gap-2">
+                            <Input
+                              type="tel"
+                              {...field}
+                              value={field.value?.toString() || ""}
+                              onChange={(e) =>
+                                field.onChange(
+                                  Number(e.target.value) || undefined,
+                                )
+                              }
+                              className="rounded-full w-full !h-12"
+                              placeholder="Ex: 5000"
+                              maxLength={10}
+                            />
+                            <div className="hidden sm:flex flex-row gap-2 items-center justify-center bg-success/10 rounded-full">
+                              <p className="text-center text-success mx-2">
+                                Melhor média para a sua oferta:{" "}
+                                <span className="font-semibold">
+                                  {bestAverage.toLocaleString("pt-BR")}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        </FormControl>
+
+                        {!errors.averageMilesPerPassenger && (
+                          <FormDescription className="sm:hidden text-success text-center">
                             Melhor média para a sua oferta:{" "}
                             <span className="font-semibold">
                               {bestAverage.toLocaleString("pt-BR")}
                             </span>
-                          </p>
-                        </div>
-                      </div>
-                    </FormControl>
+                          </FormDescription>
+                        )}
 
-                    {!errors.averageMilesPerPassenger && (
-                      <FormDescription className="sm:hidden text-success text-center">
-                        Melhor média para a sua oferta:{" "}
-                        <span className="font-semibold">
-                          {bestAverage.toLocaleString("pt-BR")}
-                        </span>
-                      </FormDescription>
+                        <FormMessage />
+                      </FormItem>
                     )}
-
-                    <FormMessage />
-                  </FormItem>
+                  />
                 )}
-              />
-            )}
-
-            <div className="space-y-2">
-              {errors.valuePerThousand && (
-                <p className="text-sm text-destructive font-medium flex 2xl:hidden">
-                  <span className="mr-1">Escolha entre</span>
-                  <span className="font-semibold">
-                    {moneyFormatter.format(VALUE_PER_THOUSAND_MIN)}{" "}
-                  </span>
-                  <span className="mx-1">e</span>
-                  <span className="font-semibold">
-                    {moneyFormatter.format(VALUE_PER_THOUSAND_MAX)}
-                  </span>
-                </p>
-              )}
-
-              <RankingBadges rankingData={rankingData} error={rankingError} />
+              </div>
+              <div className="space-y-2 relative">
+                <RankingBadges rankingData={rankingData} error={rankingError} />
+              </div>
             </div>
           </CardContent>
         </Card>
